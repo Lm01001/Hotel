@@ -189,7 +189,7 @@ protected:
 	}
 };
 
-*/class Hotel{
+*/class Hotel{ //klasa wstepnie skonczona - dziala
 public:
 	const static string nazwa, adres;
 	const static float l_gwiazdek;
