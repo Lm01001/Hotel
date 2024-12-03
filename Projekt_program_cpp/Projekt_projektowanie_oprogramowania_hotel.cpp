@@ -205,27 +205,28 @@ public:
 	int wyswietl_dostepne_pokoje() {
 	    srand(time(NULL));
 	    int i=0;
+		static int liczba_pokoi = rand() % 123 + 120;  //sprawdzic czy gdzies tez dostepne i uzywana zmienna  !!!!!!!!
 	    wybor:
-	    cout << "Podaj standard pokoju, gdzie 0-standard, 1-studio i 2-premium: "
-	    <<endl;
+	    cout << "Podaj standard pokoju, gdzie 0-standard, 1-studio i 2-premium: " << endl;
 	    cin >> i;
-	    if(i<1 || i>2){
-	        cout << "Podano niepoprawną wartość! Chcesz wybrac ponownie wpisz 1." << endl;
-	        cin >> i; 
-	        if(i == 1)
-	            goto wybor;
-	        else 
-	            return 0;
-	    }
-	    int liczba_pokoi = rand() % 11 + 5;
-	    if(i == 0){
-	        cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi<<endl;
-	    }else if(i == 1){
-	        cout << "Liczba dostepnych pokoi 'studio': " <<liczba_pokoi<<endl;
-	    }else{
-	        cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi<<endl;
-	    }
-		return 0;
+		switch(i){
+			case 0:
+				cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi << endl;
+				return 0;
+			case 1:
+				cout << "Liczba dostepnych pokoi 'studio': " << liczba_pokoi << endl;
+				return 0;
+			case 2:
+				cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi<<endl;
+				return 0;
+			case default:
+				cout << "Podano niepoprawną wartość! Chcesz wybrac ponownie wpisz 1." << endl;
+	        	cin >> i; 
+	        	if(i == 1)
+	            	goto wybor;
+	        	else 
+	            	return 0;
+		};
 	}
 };
 
