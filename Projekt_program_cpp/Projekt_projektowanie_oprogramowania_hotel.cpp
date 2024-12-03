@@ -193,7 +193,6 @@ protected:
 public:
 	const static string nazwa, adres;
 	const static float l_gwiazdek;
-	const string standard[3] = {"standard", "studio", "premium"};
 	int wyswietl_informacje_o_hotelu(const float& l_gwiazdek, const string& nazwa, const string& adres) {  // metoda dziala
 		cout << "Nazwa: " << nazwa << endl;
 		cout << "Adres: " << adres << endl;
@@ -220,7 +219,7 @@ public:
 	    }
 	    int liczba_pokoi = rand() % 11 + 5;
 	    if(i == 0){
-	        cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi<<endl1;
+	        cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi<<endl;
 	    }else if(i == 1){
 	        cout << "Liczba dostepnych pokoi 'studio': " <<liczba_pokoi<<endl;
 	    }else{
