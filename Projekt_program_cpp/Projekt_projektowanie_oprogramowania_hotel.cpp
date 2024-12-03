@@ -3,7 +3,10 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <ctime>
+#include <cstdlib>
 using namespace std;
+
 
 /*class Gosc{
 	string imie, email, nazwisko;
@@ -190,6 +193,7 @@ protected:
 public:
 	const static string nazwa, adres;
 	const static float l_gwiazdek;
+	const string standard[3] = {"standard", "studio", "premium"};
 	int wyswietl_informacje_o_hotelu(const float& l_gwiazdek, const string& nazwa, const string& adres) {  // metoda dziala
 		cout << "Nazwa: " << nazwa << endl;
 		cout << "Adres: " << adres << endl;
@@ -199,7 +203,29 @@ public:
 		cout << endl << endl;
 		return 0;
 	}
-	int wyswietl_dostepne_pokoje(string standard_pokoju, int liczba_pokoi) {
+	int wyswietl_dostepne_pokoje() {
+	    srand(time(NULL));
+	    int i=0;
+	    wybor:
+	    cout << "Podaj standard pokoju, gdzie 0-standard, 1-studio i 2-premium: "
+	    <<endl;
+	    cin >> i;
+	    if(i<1 || i>2){
+	        cout << "Podano niepoprawną wartość! Chcesz wybrac ponownie wpisz 1." << endl;
+	        cin >> i; 
+	        if(i == 1)
+	            goto wybor;
+	        else 
+	            return 0;
+	    }
+	    int liczba_pokoi = rand() % 11 + 5;
+	    if(i == 0){
+	        cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi<<endl1;
+	    }else if(i == 1){
+	        cout << "Liczba dostepnych pokoi 'studio': " <<liczba_pokoi<<endl;
+	    }else{
+	        cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi<<endl;
+	    }
 		return 0;
 	}
 };
@@ -208,5 +234,7 @@ int main()
 {
 	Hotel h;
 	h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
+	cout<<endl<<endl;
+	h.wyswietl_dostepne_pokoje();
 	return 0;
 }
