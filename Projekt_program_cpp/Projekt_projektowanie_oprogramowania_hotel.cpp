@@ -5,8 +5,12 @@
 #include <unordered_map>
 #include <ctime>
 #include <cstdlib>
+#include <cctype>
+#include <string>
+#include <algorithm>
+#include <iomanip>
+#include <ctime>
 using namespace std;
-
 
 /*class Gosc{
 	string imie, email, nazwisko;
@@ -71,8 +75,36 @@ class Rezerwacja{
 	double id_rezerwacji;
 	string poczatek_rezerwacji, koniec_rezerwacji;
 public:
-	void utworz_rezerwacje(string standard_pokoju, string imie_goscia, string nazwisko_goscia, const string& poczatek_rezerwacji, const string& koniec_rezerwacji) { // czy const przy dacie???
+	Rezerwacja() { //pseudolosowe generowanie id rezerwacji. zakres 1-1000
+        srand(time(0));
+        id_rezerwacji = rand() % 1000 + 1; 
+    }
+	void utworz_rezerwacje() {   //dziala jedynie trzeba dodac jakas weryfikacje tej daty czy cokolwiek ob pierdoly mozna pisac
+		string standard_pokoju, imie_goscia, nazwisko_goscia;  //ale tak to bangla
+		int i = 0;
+		cout<<"Podaj imie: "; cin >> imie_goscia;
+		standard:
+		cout<<"Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; cin >> standard_pokoju;
+		transform(standard_pokoju.begin(), standard_pokoju.end(), standard_pokoju.begin(), ::tolower);
+		if(standard_pokoju != "standard" && standard_pokoju != "studio" && standard_pokoju != "premium"){
+			cout << "Taki standard nie istnieje. Chcesz wybrać ponownie, podaj 1.\n";
+			cin >> i;
+			if(i == 1)
+	            	goto standard;
+	        	else 
+	            	return;
+		}
+		cout<<"Podaj nazwisko: "; cin >> nazwisko_goscia;
+		cout<<"Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR): "; cin >> poczatek_rezerwacji;
+		cout<<"Podaj koniec rezerwacji (w formacie: DD-MM-RRRR): "; cin >> koniec_rezerwacji;
+		cout<<"Rezerwacja utworzona pomyslnie!"<<endl;
 
+		cout << left;  // Align to the left for all columns
+        cout << setw(15) << "ID Rezerwacji" << setw(20) << "Imie" << setw(20) << "Nazwisko" 
+             << setw(20) << "Poczatek" << setw(20) << "Koniec" << endl;
+        cout << "---------------------------------------------------------------------------------------" << endl;
+		cout << setw(15) << id_rezerwacji << setw(20) << imie_goscia << setw(20) << nazwisko_goscia
+             << setw(20) << poczatek_rezerwacji << setw(20) << koniec_rezerwacji << endl;
 	}
 	void usun_rezerwacje(const double& id_rezerwacji) {
 
@@ -193,6 +225,7 @@ protected:
 public:
 	const static string nazwa, adres;
 	const static float l_gwiazdek;
+	int liczba_pokoi[3];
 	int wyswietl_informacje_o_hotelu(const float& l_gwiazdek, const string& nazwa, const string& adres) {  // metoda dziala
 		cout << "Nazwa: " << nazwa << endl;
 		cout << "Adres: " << adres << endl;
@@ -203,28 +236,30 @@ public:
 		return 0;
 	}
 	int wyswietl_dostepne_pokoje() {
-	    srand(time(NULL));
 	    int i=0;
-		static int liczba_pokoi = rand() % 123 + 120;  //sprawdzic czy gdzies tez dostepne i uzywana zmienna  !!!!!!!!
+		srand(time(NULL));
+		for (int i = 0; i < 3; ++i) {
+            liczba_pokoi[i] = rand() % 123 + 1;
+        }
 	    wybor:
 	    cout << "Podaj standard pokoju, gdzie 0-standard, 1-studio i 2-premium: " << endl;
 	    cin >> i;
 		switch(i){
 			case 0:
-				cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi << endl;
+				cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi[0] << endl;
 				return 0;
 			case 1:
-				cout << "Liczba dostepnych pokoi 'studio': " << liczba_pokoi << endl;
+				cout << "Liczba dostepnych pokoi 'studio': " << liczba_pokoi[1] << endl;
 				return 0;
 			case 2:
-				cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi<<endl;
+				cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi[2] << endl;
 				return 0;
-			case default:
+			default:
 				cout << "Podano niepoprawną wartość! Chcesz wybrac ponownie wpisz 1." << endl;
 	        	cin >> i; 
 	        	if(i == 1)
-	            	goto wybor;
-	        	else 
+	            	goto wybor; 
+				else
 	            	return 0;
 		};
 	}
