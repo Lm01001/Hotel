@@ -10,9 +10,10 @@
 #include <algorithm>
 #include <iomanip>
 #include <ctime>
+#include <sstream>
 using namespace std;
 
-class Gosc{
+/*class Gosc{
 	string imie, email, nazwisko;
 	double nr_tel, id_goscia;
 public:
@@ -69,52 +70,85 @@ class Administrator_systemu {
 	zarzadzaj_kontami(string id_konta_goscia) {
 
 	}
-};
+};*/
 
 class Rezerwacja{
 	double id_rezerwacji;
-	string poczatek_rezerwacji, koniec_rezerwacji;
+	string poczatek_rezerwacji, koniec_rezerwacji, dane;
 public:
-	Rezerwacja() { //pseudolosowe generowanie id rezerwacji. zakres 1-1000
+	bool poprawna_data(const string& data){
+    	if (data.size() != 10) return false;
+    	if ((data[2] != '-' && data[2] != '.') || (data[5] != '-' && data[5] != '.')) 
+        	return false;
+    	for (int i = 0; i < data.size(); ++i) 
+		{
+       		if (i == 2 || i == 5) continue;  // Skip the separator
+        		if (!isdigit(data[i])) return false;
+    	}
+    	return true;
+	}
+	Rezerwacja(){ //pseudolosowe generowanie id rezerwacji. zakres 1-1000
         srand(time(0));
-        id_rezerwacji = rand() % 1000 + 1; 
+        id_rezerwacji=rand()%1000+1; 
     }
-	void utworz_rezerwacje() {   //dziala jedynie trzeba dodac jakas weryfikacje tej daty czy cokolwiek ob pierdoly mozna pisac
-		string standard_pokoju, imie_goscia, nazwisko_goscia;  //ale tak to bangla
+	void utworz_rezerwacje(){   //dziala 
+		string standard_pokoju, imie_goscia, nazwisko_goscia; 
 		int i = 0;
 		cout<<"Podaj imie: "; cin >> imie_goscia;
-		standard:
-		cout<<"Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; cin >> standard_pokoju;
-		transform(standard_pokoju.begin(), standard_pokoju.end(), standard_pokoju.begin(), ::tolower);
-		if(standard_pokoju != "standard" && standard_pokoju != "studio" && standard_pokoju != "premium"){
-			cout << "Taki standard nie istnieje. Chcesz wybrać ponownie, podaj 1.\n";
-			cin >> i;
-			if(i == 1)
-	            	goto standard;
-	        	else 
-	            	return;
-		}
 		cout<<"Podaj nazwisko: "; cin >> nazwisko_goscia;
-		cout<<"Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR): "; cin >> poczatek_rezerwacji;
-		cout<<"Podaj koniec rezerwacji (w formacie: DD-MM-RRRR): "; cin >> koniec_rezerwacji;
+		for(;;){
+			cout<<"Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; cin >> standard_pokoju;
+			transform(standard_pokoju.begin(), standard_pokoju.end(), standard_pokoju.begin(), ::tolower);
+			if(standard_pokoju!="standard" && standard_pokoju!="studio" && standard_pokoju!="premium")
+			{
+				cout<<"Taki standard nie istnieje. Chcesz wybrać ponownie, podaj 1.\n";
+				cin>>i;
+				if(i!=1)
+	           		return;
+				else	
+					continue;
+			}else	
+				break;
+		}
+		for (;;) 
+		{
+        	cout << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
+        	cin >> poczatek_rezerwacji;
+        	if (!poprawna_data(poczatek_rezerwacji)) 
+           		cout<<endl<<"Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR"<<endl;
+         	else 
+            	break;
+        }
+		for (;;) 
+		{
+        	cout << "Podaj koniec rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
+        	cin >> koniec_rezerwacji;
+        	if (!poprawna_data(koniec_rezerwacji))
+            	cout<<endl<<"Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR"<<endl;
+        	else 
+            	break;
+        }
 		cout<<"Rezerwacja utworzona pomyslnie!"<<endl;
-
-		cout << left;  // Align to the left for all columns
-        cout << setw(15) << "ID Rezerwacji" << setw(20) << "Imie" << setw(20) << "Nazwisko" 
-             << setw(20) << "Poczatek" << setw(20) << "Koniec" << endl;
-        cout << "---------------------------------------------------------------------------------------" << endl;
-		cout << setw(15) << id_rezerwacji << setw(20) << imie_goscia << setw(20) << nazwisko_goscia
-             << setw(20) << poczatek_rezerwacji << setw(20) << koniec_rezerwacji << endl;
+		ostringstream oss;
+        	oss<<left<<setw(20)<<id_rezerwacji<<setw(15)<<(imie_goscia.size()>18 ? imie_goscia.substr(0, 17)+"." : imie_goscia)
+        	<<setw(20)<<(nazwisko_goscia.size()>18 ? nazwisko_goscia.substr(0, 17)+"." : nazwisko_goscia)<<setw(20)<<standard_pokoju
+			<<setw(20)<<poczatek_rezerwacji<<setw(20)<<koniec_rezerwacji;
+        	dane+=oss.str()+"\n";
+			cout<<left;  
+			cout<<setw(20)<<"ID Rezerwacji"<<setw(15)<<"Imie"<<setw(20)<<"Nazwisko"<<setw(20)<<"Standard"<<setw(20)<<"Poczatek"<<setw(20)<<"Koniec"<<endl;
+			cout<<string(110, '-')<<endl;
+			cout<<dane;
 	}
-	void usun_rezerwacje(const double& id_rezerwacji) {
+	void usun_rezerwacje(const double& id_rezerwacji){
 
 	}
-	void aktualizuj_rezerwacje(const double& id_rezerwacji) {
+	void aktualizuj_rezerwacje(const double& id_rezerwacji){
 
 	}
 };
+		
 
-class I_menadzer_rezerwacji {
+/*class I_menadzer_rezerwacji {
 public:
 	virtual void stworzRezerwacje(int id_goscia, Rezerwacja rezerwacja) = 0;
 	virtual void anulujRezerwacje(int id_rezerwacji) = 0;
@@ -219,7 +253,7 @@ protected:
 		}
 		return 1;
 	}
-};
+};*/
 
 /*class Hotel{ //klasa wstepnie skonczona - dziala
 public:
