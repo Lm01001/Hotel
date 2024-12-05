@@ -12,7 +12,7 @@
 #include <ctime>
 using namespace std;
 
-/*class Gosc{
+class Gosc{
 	string imie, email, nazwisko;
 	double nr_tel, id_goscia;
 public:
@@ -221,7 +221,7 @@ protected:
 	}
 };
 
-*/class Hotel{ //klasa wstepnie skonczona - dziala
+/*class Hotel{ //klasa wstepnie skonczona - dziala
 public:
 	const static string nazwa, adres;
 	const static float l_gwiazdek;
@@ -263,13 +263,16 @@ public:
 	            	return 0;
 		};
 	}
-};
+};*/
 
 int main()
 {
-	Hotel h;
+	/*Hotel h;
 	h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
 	cout<<endl<<endl;
-	h.wyswietl_dostepne_pokoje();
+	h.wyswietl_dostepne_pokoje();*/
+	
+	Rezerwacja r;
+	r.utworz_rezerwacje();
 	return 0;
 }
