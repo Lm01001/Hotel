@@ -1,4 +1,4 @@
-#include <iostream>
+#include <iostream>   // zrobione:  hotel,  gosc, rezerwacja
 #include <memory>
 #include <vector>
 #include <string>
@@ -11,34 +11,58 @@
 #include <iomanip>
 #include <ctime>
 #include <sstream>
-#include <sqlite3.h>cz
+#include <sqlite3.h>
 using namespace std;
-
-sqlite3 baza_danych_hotele.sqlite3
 
 class Gosc{
 	string imie, email, nazwisko, dane;
 	double nr_tel, id_goscia;
-public:
-	/*Gosc(const string& imie, const string& nazwisko, const string& email, double nr_tel, double id_goscia) 
-		: imie(im), nazwisko(nazw), email(email), nr_tel(nr_tel), id_goscia(id_goscia) {}
-
+	sqlite3* db;
+public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
 	Gosc(){ //pseudolosowe generowanie id goscia. zakres 1-1000
         srand(time(0));
-        id_goscia=rand()%5000+1; 
-    }*/  //mamy te dane podawane w rezerwacji
-
-	vector<string> zobacz_oferty_hoteli() {
+        id_goscia=rand()%5000+1; //mamy te dane podawane w rezerwacji 
+    }  
+	Gosc(const string& db_path){
+        if(sqlite3_open(db_path.c_str(), &db)){
+            cerr<<"Nie można otworzyć bazy danych: "<<sqlite3_errmsg(db)<<endl;
+            db=nullptr;
+        }
+    }
+    ~Gosc(){ //destruktor
+        if(db) 
+            sqlite3_close(db);
+    }
+	vector<string> zobacz_oferty_hoteli(const string& miasto = "", int min_gwiazdek = 0) {
 		vector<string> oferty;
-		oferty.push_back("hotel1");
-		oferty.push_back("hotel2");
-		oferty.push_back("hotel3");
+		if(!db)
+		{
+            cerr << "Baza danych nie jest otwarta!" << endl;
+            return oferty;
+        }
+        string sql = "SELECT nazwa_hotelu, ilosc_gwiazdek, miasto FROM hotele WHERE 1=1";
+        if(!miasto.empty())
+            sql += " AND miasto = '" + miasto + "'";
+        if(min_gwiazdek>0)
+            sql += " AND ilosc_gwiazdek >= " + to_string(min_gwiazdek);
+        auto callback = [](void* oferty, int argc, char** argv, char** azColName) -> int // Funkcja callback do przetwarzania wyników
+		{
+            vector<string>* wyniki_vector = static_cast<vector<string>*>(oferty);
+            string wynik = "Hotel: " + string(argv[0]) + ", Gwiazdki: " + string(argv[1]) + ", Miasto: " + string(argv[2]);
+            wyniki_vector->push_back(wynik);
+            return 0;
+        };
 
+        char* error=nullptr;
+        if(sqlite3_exec(db, sql.c_str(), callback, &oferty, &error)!=SQLITE_OK){
+            cerr<<"Błąd podczas wykonywania zapytania: "<<error<< endl;
+            sqlite3_free(error);
+        }
 		return oferty;
 	}
 };
 
-class Rachunek{
+/*class Rachunek{
 	double kwota;
 	string data_wystawienia, data_platnosci;
 public:
@@ -258,7 +282,7 @@ protected:
 		return 1;
 	}
 };
-
+*/
 /*class Hotel{ //klasa wstepnie skonczona - dziala
 public:
 	const static string nazwa, adres;
@@ -303,6 +327,7 @@ public:
 	}
 };*/
 
+
 int main()
 {
 	/*Hotel h;
@@ -310,7 +335,10 @@ int main()
 	cout<<endl<<endl;
 	h.wyswietl_dostepne_pokoje();*/
 	
-	Rezerwacja r;
-	r.utworz_rezerwacje();
+	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
+    vector<string> wyniki = hotel.zobacz_oferty_hoteli("Praga", 4);
+    for(const string& wynik : wyniki)
+        cout<<wynik<<endl;
+
 	return 0;
 }
