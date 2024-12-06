@@ -1,0 +1,34 @@
+CREATE TABLE hotele (id INTEGER PRIMARY KEY AUTOINCREMENT, nazwa_hotelu TEXT, ilosc_gwiazdek INT(6),
+	miasto TEXT, panstwo TEXT);
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 1', 4, 'Sosnowiec', 'Polska'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 2', 3, 'Barcelona', 'Hiszpania'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 3', 4, 'Madryt', 'Hiszpania'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 4', 3, 'Turyn', 'Wlochy'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 5', 3, 'Instanbul', 'Turcja'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 6', 5, 'Kair', 'Egipt');
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 7', 4, 'Sozopol', 'Bulgaria'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 8', 4, 'Cardiff', 'Walia');
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 9', 3, 'Glasgow', 'Irlandia'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 10', 4, 'Antwerpia', 'Belgia'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 11', 3, 'Amsterdam', 'Niderlandy'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 12', 3, 'Rotterdam', 'Niderlandy'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 13', 4, 'Bruksela', 'Belgia');
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 14', 5, 'Berlin', 'Niemcy'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 15', 5, 'Geneva', 'Szwajcaria'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 16', 2, 'Porto', 'Portugalia'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 17', 3, 'Herat', 'Afganistan'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 18', 4, 'Sofia', 'Bulgaria'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 19', 3, 'Podgorica', 'Czarnogora'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 20', 3, 'Saloniki', 'Grecja'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 21', 5, 'Ateny', 'Grecja'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 22', 3, 'Wieden', 'Austria'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 23', 3, 'Eger', 'Wegry'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 24', 4, 'Budapeszt', 'Wegry'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 25', 2, 'Belgrad', 'Serbia'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 26', 5, 'Paryz', 'Francja'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 27', 4, 'Marsylia', 'Francja'); 
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 28', 4, 'Elche', 'Hiszpania');
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 29', 4, 'Praga', 'Czechy');
+INSERT INTO hotele (nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo) VALUES ('Hotel 30', 3, 'Praga', 'Czechy');
+
