@@ -12,7 +12,7 @@
 #include <ctime>
 #include <sstream>
 #include <sqlite3.h>
-using namespace std;
+using namespace std; // kompilacja:  g++ -std=c++11 -o hotel_program Projekt_projektowanie_oprogramowania_hotel.cpp
 
 class Gosc{
 	string imie, email, nazwisko, dane;
@@ -23,12 +23,12 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
         srand(time(0));
         id_goscia=rand()%5000+1; //mamy te dane podawane w rezerwacji 
     }  
-	Gosc(const string& db_path){
+	/*Gosc(const string& db_path){
         if(sqlite3_open(db_path.c_str(), &db)){
             cerr<<"Nie można otworzyć bazy danych: "<<sqlite3_errmsg(db)<<endl;
             db=nullptr;
         }
-    }
+    }*/
     ~Gosc(){ //destruktor
         if(db) 
             sqlite3_close(db);
@@ -53,50 +53,12 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
             return 0;
         };
 
-        char* error=nullptr;
+       /*char* error=nullptr;
         if(sqlite3_exec(db, sql.c_str(), callback, &oferty, &error)!=SQLITE_OK){
             cerr<<"Błąd podczas wykonywania zapytania: "<<error<< endl;
             sqlite3_free(error);
-        }
+        }*/
 		return oferty;
-	}
-};
-
-/*class Rachunek{
-	double kwota;
-	string data_wystawienia, data_platnosci;
-public:
-	utworz_rachunek(const string& data_wystawienia, const string& data_platnosci) {
-
-	}
-	zaplac(double& kwota) {
-
-	}
-
-};
-
-class Administrator_systemu {
-	double id_administratora;
-	void zarzadzaj_permisjami(const id_administratora, string login, string haslo, string permisje) { //dokonczyc koncowka
-		cout << "Podaj ID administratora: " << endl;
-		cin >> id_administratora;
-		permisje = "rrr";
-		if (!id_administratora)
-			return;
-		cout << "Podaj login: " << endl;
-		if (!login)
-			return;
-		cout << "Podaj haslo: " << endl;
-		if (!haslo)
-			return;
-		cout << "Zmiana permisji (aktualne r-r-r, podawac bez " - "):" << endl
-			cin >> permisje;
-		cout << endl << "Aktualne permisje po zmianie: " << permisje[0] << "-" << permisje[1] << "-" << permisje[2] << endl;
-		cout << "Zmiany wprowadzone i zapisane pomyslnie!" << endl;
-		return;
-	}
-	zarzadzaj_kontami(string id_konta_goscia) {
-
 	}
 };
 
@@ -115,6 +77,7 @@ public:
     	}
     	return true;
 	}
+	
 	Rezerwacja(){ //pseudolosowe generowanie id rezerwacji. zakres 1-1000
         srand(time(0));
         id_rezerwacji=rand()%1000+1; 
@@ -156,6 +119,7 @@ public:
         	else 
             	break;
         }
+
 		cout<<"Rezerwacja utworzona pomyslnie!"<<endl;
 		ostringstream oss;
         	oss<<left<<setw(20)<<id_rezerwacji<<setw(15)<<(imie_goscia.size()>18 ? imie_goscia.substr(0, 17)+"." : imie_goscia)
@@ -174,23 +138,89 @@ public:
 
 	}
 };
-		
 
-class I_menadzer_rezerwacji {
+class Rachunek{
+	double kwota;
+	string data_wystawienia, data_platnosci;
 public:
-	virtual void stworzRezerwacje(int id_goscia, Rezerwacja rezerwacja) = 0;
-	virtual void anulujRezerwacje(int id_rezerwacji) = 0;
-	virtual void aktualizujRezerwacje(int id_rezerwacji, Rezerwacja nowa_rezerwacja) = 0;
-	virtual vector<Rezerwacja> wyswietlRezerwacje(int id_goscia) = 0;
-	virtual ~I_menadzer_rezerwacji() = default;  //wirtualny destruktor
+	void wyswietl_id_rezerwacji(const Rezerwacja& rezerwacja) {} // uzycie gettera
+	void utworz_rachunek(const string& data_wystawienia, const string& data_platnosci, int czas_pobytu) {
+		cout << "Rachunek klienta: "<<endl;
+
+	}
+	int zaplac(double& kwota) {  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		cout<< "Kwota do zaplaty: "<<kwota<<endl;
+		return 0;
+	}
+
 };
 
+//class Administrator_systemu {
+	//double id_administratora;
+	/*void zarzadzaj_permisjami(const id_administratora, string login, string haslo, string permisje) { //dokonczyc koncowka
+		cout << "Podaj ID administratora: " << endl;
+		cin >> id_administratora;
+		permisje = "rrr";
+		if (!id_administratora)
+			return;
+		cout << "Podaj login: " << endl;
+		if (!login)
+			return;
+		cout << "Podaj haslo: " << endl;
+		if (!haslo)
+			return;
+		cout << "Zmiana permisji (aktualne r-r-r, podawac bez " - "):" << endl
+			cin >> permisje;
+		cout << endl << "Aktualne permisje po zmianie: " << permisje[0] << "-" << permisje[1] << "-" << permisje[2] << endl;
+		cout << "Zmiany wprowadzone i zapisane pomyslnie!" << endl;
+		return;
+	}*/
+/*	Administrator_systemu(){ //pseudolosowe generowanie id rezerwacji. zakres 1-1000
+        srand(time(0));
+        id_rezerwacji=rand()%1000+1; 
+    }
+	int zarzadzaj_kontami(string id_konta_goscia, int wybor) {   /// !!!!!!!!!!!!!!!1
+		Administrator_systemu(){ //pseudolosowe generowanie id rezerwacji. zakres 1-1000
+        srand(time(0));
+        id_konta_goscia=rand()%1000+1; 
+    	}
+		cout << "Jakie dzialania podjac z kontem " << id_konta_goscia << " ?"<<endl;
+		cout << "Reset konta - 1, Zmiana id - 2, Anuluj - 3"<<endl;
+		cin >> wybor;
+		for(;;){
+			if(wybor > 3 || wybor < 1){
+				cout<<"Bledna, nieistniejaca opcja!"<<endl;
+				break;
+			}
+			if(wybor == 1){
+				id_konta_goscia=0;
+			}else if(wybor == 2){
+				cout<<"Podaj nowe id." <<endl;
+				cin >> id_konta_goscia;
+				cout <<"Id konta zaktualizowane!"<<endl;
+			}else	
+				break;
+
+		}
+	}
+};*/
+
+/*
+class I_menadzer_rezerwacji {
+public:
+	virtual void stworz_rezerwacje(int id_goscia, Rezerwacja rezerwacja) = 0;
+	virtual void anuluj_rezerwacje(int id_rezerwacji) = 0;
+	virtual void aktualizuj_rezerwacje(int id_rezerwacji, Rezerwacja nowa_rezerwacja) = 0;
+	virtual vector<Rezerwacja> wyswietl_rezerwacje(int id_goscia) = 0;
+	virtual ~I_menadzer_rezerwacji() = default;  //wirtualny destruktor
+};
+*//*
 class Menadzer_rezerwacji : public I_menadzer_rezerwacji {	  //klucz: id_goscia, hash-table na wartosci klucz-gosc
 	unordered_map<int, vector<Rezerwacja>> rezerwacje-mapa;  //z biblioteki <unordered_map> funckja dzialajaca jak powyzej
 public:
-	void stworzRezerwacje(int id_goscia, Rezerwacja rezerwacja) override {} //do nadpisywania i wychwytywania bledow dot klasy bazowej    !!!!!!!
-	void anulujRezerwacje(int id_rezerwacji) override {}
-	void aktualizujRezerwacje(int id_rezerwacji, Rezerwacja nowa_rezerwacja) override {}
+	void zrob_rezerwacje(int id_goscia, Rezerwacja rezerwacja) override {} //do nadpisywania i wychwytywania bledow dot klasy bazowej    !!!!!!!
+	void anuluj_rezerwacje(int id_rezerwacji) override {}
+	void aktualizuj_rezerwacje(int id_rezerwacji, Rezerwacja nowa_rezerwacja) override {}
 	vector<Rezerwacja> wyswietlRezerwacje(int id_goscia) override {}
 };
 
@@ -281,20 +311,21 @@ protected:
 		}
 		return 1;
 	}
-};
-*/
-/*class Hotel{ //klasa wstepnie skonczona - dziala
+};*/
+
+class Hotel{ //klasa wstepnie skonczona - dziala
 public:
 	const static string nazwa, adres;
 	const static float l_gwiazdek;
 	int liczba_pokoi[3];
 	int wyswietl_informacje_o_hotelu(const float& l_gwiazdek, const string& nazwa, const string& adres) {  // metoda dziala
+		cout<<"\t---Wyswietlanie informacji o hotelu---"<<endl;
 		cout << "Nazwa: " << nazwa << endl;
 		cout << "Adres: " << adres << endl;
 		cout << "Liczba gwiazdek: ";
 		for(int i = 0; i < l_gwiazdek; i++)
 			cout << "*";
-		cout << endl << endl;
+		cout << endl;
 		return 0;
 	}
 	int wyswietl_dostepne_pokoje() {
@@ -304,6 +335,7 @@ public:
             liczba_pokoi[i] = rand() % 123 + 1;
         }
 	    wybor:
+		cout<<"\t---wyswietlanie dostepnych hoteli---"<<endl;
 	    cout << "Podaj standard pokoju, gdzie 0-standard, 1-studio i 2-premium: " << endl;
 	    cin >> i;
 		switch(i){
@@ -325,20 +357,25 @@ public:
 	            	return 0;
 		};
 	}
-};*/
+};
 
 
 int main()
 {
-	/*Hotel h;
+	Hotel h;
 	h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
 	cout<<endl<<endl;
-	h.wyswietl_dostepne_pokoje();*/
+	h.wyswietl_dostepne_pokoje();
 	
-	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
+	Gosc hotel;
+	hotel=hotel("data/my_sqlite3_hotele_baza.sqlite3");
     vector<string> wyniki = hotel.zobacz_oferty_hoteli("Praga", 4);
     for(const string& wynik : wyniki)
         cout<<wynik<<endl;
+
+
+	//Rezerwacja r;
+	//r.utworz_rezerwacje();
 
 	return 0;
 }
