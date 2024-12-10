@@ -12,7 +12,7 @@
 #include <ctime>
 #include <sstream>
 #include <sqlite3.h>
-using namespace std; // kompilacja:  g++ -std=c++11 -o hotel_program Projekt_projektowanie_oprogramowania_hotel.cpp
+using namespace std; // kompilacja:  g++ -std=c++11 -o hotel_program Projekt_projektowanie_oprogramowania_hotel.cpp -lsqlite3
 
 class Gosc{
 	string imie, email, nazwisko, dane;
@@ -23,26 +23,24 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
         srand(time(0));
         id_goscia=rand()%5000+1; //mamy te dane podawane w rezerwacji 
     }  
-	/*Gosc(const string& db_path){
+	Gosc(const string& db_path){
         if(sqlite3_open(db_path.c_str(), &db)){
             cerr<<"Nie można otworzyć bazy danych: "<<sqlite3_errmsg(db)<<endl;
             db=nullptr;
         }
-    }*/
-    ~Gosc(){ //destruktor
-        if(db) 
-            sqlite3_close(db);
     }
-	vector<string> zobacz_oferty_hoteli(const string& miasto = "", int min_gwiazdek = 0) {
+    
+	vector<string> zobacz_oferty_hoteli(const string& panstwo = "", int min_gwiazdek = 0) {
 		vector<string> oferty;
+		cout<<endl<<"\t---Wyswietlanie dostepnych hoteli---"<<endl;
 		if(!db)
 		{
             cerr << "Baza danych nie jest otwarta!" << endl;
             return oferty;
         }
         string sql = "SELECT nazwa_hotelu, ilosc_gwiazdek, miasto FROM hotele WHERE 1=1";
-        if(!miasto.empty())
-            sql += " AND miasto = '" + miasto + "'";
+        if(!panstwo.empty())
+            sql += " AND panstwo = '" + panstwo + "'";
         if(min_gwiazdek>0)
             sql += " AND ilosc_gwiazdek >= " + to_string(min_gwiazdek);
         auto callback = [](void* oferty, int argc, char** argv, char** azColName) -> int // Funkcja callback do przetwarzania wyników
@@ -53,13 +51,18 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
             return 0;
         };
 
-       /*char* error=nullptr;
+       char* error=nullptr;
         if(sqlite3_exec(db, sql.c_str(), callback, &oferty, &error)!=SQLITE_OK){
             cerr<<"Błąd podczas wykonywania zapytania: "<<error<< endl;
             sqlite3_free(error);
-        }*/
+        }
 		return oferty;
 	}
+
+	~Gosc(){ //destruktor
+        if(db) 
+            sqlite3_close(db);
+    }
 };
 
 class Rezerwacja{
@@ -340,16 +343,16 @@ public:
 	    cin >> i;
 		switch(i){
 			case 0:
-				cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi[0] << endl;
+				cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi[0] << endl << endl;
 				return 0;
 			case 1:
-				cout << "Liczba dostepnych pokoi 'studio': " << liczba_pokoi[1] << endl;
+				cout << "Liczba dostepnych pokoi 'studio': " << liczba_pokoi[1] << endl << endl;
 				return 0;
 			case 2:
-				cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi[2] << endl;
+				cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi[2] << endl << endl;
 				return 0;
 			default:
-				cout << "Podano niepoprawną wartość! Chcesz wybrac ponownie wpisz 1." << endl;
+				cout << "Podano niepoprawną wartość! Chcesz wybrac ponownie wpisz 1." << endl << endl;
 	        	cin >> i; 
 	        	if(i == 1)
 	            	goto wybor; 
@@ -367,9 +370,13 @@ int main()
 	cout<<endl<<endl;
 	h.wyswietl_dostepne_pokoje();
 	
-	Gosc hotel;
-	hotel=hotel("data/my_sqlite3_hotele_baza.sqlite3");
-    vector<string> wyniki = hotel.zobacz_oferty_hoteli("Praga", 4);
+	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
+	/*string panstwo; int gwiazdki;
+	cout<<"Podaj europejskie panstwo, z ktorego wyszukac hotel."<<endl; 
+	cin >> panstwo;
+	cout<<"Podaj liczbe gwiazdek hotelu."<<endl;
+	 cin >> gwiazdki;*/
+    vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3);
     for(const string& wynik : wyniki)
         cout<<wynik<<endl;
 
