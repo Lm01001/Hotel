@@ -371,12 +371,7 @@ int main()
 	//h.wyswietl_dostepne_pokoje();
 	
 	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
-	/*string panstwo; int gwiazdki;
-	cout<<"Podaj europejskie panstwo, z ktorego wyszukac hotel."<<endl; 
-	cin >> panstwo;
-	cout<<"Podaj liczbe gwiazdek hotelu."<<endl;
-	 cin >> gwiazdki;*/
-    vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3);
+    vector<string> wyniki = hotel.zobacz_oferty_hoteli("Polska", 3);
     for(const string& wynik : wyniki)
         cout<<wynik<<endl;
 
