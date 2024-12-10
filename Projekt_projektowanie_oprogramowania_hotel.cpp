@@ -38,15 +38,15 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
             cerr << "Baza danych nie jest otwarta!" << endl;
             return oferty;
         }
-        string sql = "SELECT nazwa_hotelu, ilosc_gwiazdek, miasto FROM hotele WHERE 1=1";
+        string sql = "SELECT nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo FROM hotele WHERE 1=1";
         if(!panstwo.empty())
-            sql += " AND panstwo = '" + panstwo + "'";
+          	sql += " AND panstwo = '" + panstwo + "'";
         if(min_gwiazdek>0)
             sql += " AND ilosc_gwiazdek >= " + to_string(min_gwiazdek);
         auto callback = [](void* oferty, int argc, char** argv, char** azColName) -> int // Funkcja callback do przetwarzania wyników
 		{
             vector<string>* wyniki_vector = static_cast<vector<string>*>(oferty);
-            string wynik = "Hotel: " + string(argv[0]) + ", Gwiazdki: " + string(argv[1]) + ", Miasto: " + string(argv[2]);
+            string wynik = "Hotel: " + string(argv[0]) + ", Gwiazdki: " + string(argv[1]) + ", Miasto: " + string(argv[2]) + ", Panstwo: " + string(argv[3]);
             wyniki_vector->push_back(wynik);
             return 0;
         };
@@ -365,10 +365,10 @@ public:
 
 int main()
 {
-	Hotel h;
-	h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
-	cout<<endl<<endl;
-	h.wyswietl_dostepne_pokoje();
+	//Hotel h;
+	//h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
+	//cout<<endl<<endl;
+	//h.wyswietl_dostepne_pokoje();
 	
 	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
 	/*string panstwo; int gwiazdki;
