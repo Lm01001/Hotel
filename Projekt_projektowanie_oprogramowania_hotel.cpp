@@ -12,27 +12,33 @@
 #include <ctime>
 #include <sstream>
 #include <sqlite3.h>
+
 using namespace std; // kompilacja:  g++ -std=c++11 -o hotel_program Projekt_projektowanie_oprogramowania_hotel.cpp -lsqlite3
 
-class Gosc{
+class Gosc
+{
 	string imie, email, nazwisko, dane;
 	double nr_tel, id_goscia;
 	sqlite3* db;
 public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
-	Gosc(){ //pseudolosowe generowanie id goscia. zakres 1-1000
+	Gosc() //pseudolosowe generowanie id goscia. zakres 1-1000
+	{ 
         srand(time(0));
-        id_goscia=rand()%5000+1; //mamy te dane podawane w rezerwacji 
+        id_goscia = rand() % 5000 + 1; //mamy te dane podawane w rezerwacji 
     }  
-	Gosc(const string& db_path){
-        if(sqlite3_open(db_path.c_str(), &db)){
-            cerr<<"Nie można otworzyć bazy danych: "<<sqlite3_errmsg(db)<<endl;
-            db=nullptr;
+	Gosc(const string& db_path)
+	{
+        if(sqlite3_open(db_path.c_str(), &db))
+		{
+            cerr << "Nie można otworzyć bazy danych: " << sqlite3_errmsg(db) << endl;
+            db = nullptr;
+			exit(1);
         }
     }
-    
-	vector<string> zobacz_oferty_hoteli(const string& panstwo = "", int min_gwiazdek = 0) {
+	vector<string> zobacz_oferty_hoteli(const string& panstwo = "", int min_gwiazdek = 0) 
+	{
 		vector<string> oferty;
-		cout<<endl<<"\t---Wyswietlanie dostepnych hoteli---"<<endl;
+		cout << endl << "\t---Wyswietlanie dostepnych hoteli---" << endl;
 		if(!db)
 		{
             cerr << "Baza danych nie jest otwarta!" << endl;
@@ -51,114 +57,127 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
             return 0;
         };
 
-       char* error=nullptr;
-        if(sqlite3_exec(db, sql.c_str(), callback, &oferty, &error)!=SQLITE_OK){
+       char* error = nullptr;
+        if(sqlite3_exec(db, sql.c_str(), callback, &oferty, &error)!=SQLITE_OK)
+		{
             cerr<<"Błąd podczas wykonywania zapytania: "<<error<< endl;
             sqlite3_free(error);
         }
 		return oferty;
 	}
-
-	~Gosc(){ //destruktor
+	~Gosc() //destruktor
+	{ 
         if(db) 
-            sqlite3_close(db);
+        	sqlite3_close(db);
     }
 };
 
-class Rezerwacja{
+class Rezerwacja
+{
 	double id_rezerwacji;
 	string poczatek_rezerwacji, koniec_rezerwacji, dane;
 public:
-	bool poprawna_data(const string& data){
-    	if (data.size() != 10) return false;
-    	if ((data[2] != '-' && data[2] != '.') || (data[5] != '-' && data[5] != '.')) 
+	bool poprawna_data(const string& data)
+	{
+    	if(data.size() != 10) return false;
+    	if((data[2] != '-' && data[2] != '.') || (data[5] != '-' && data[5] != '.')) 
         	return false;
-    	for (int i = 0; i < data.size(); ++i) 
+    	for(int i = 0; i < data.size(); ++i) 
 		{
-       		if (i == 2 || i == 5) continue;  // Skip the separator
-        		if (!isdigit(data[i])) return false;
+       		if (i == 2 || i == 5) 
+				continue;  // pominiecie "oddzielnika"
+        	if (!isdigit(data[i])) 
+				return false;
     	}
     	return true;
 	}
-	
-	Rezerwacja(){ //pseudolosowe generowanie id rezerwacji. zakres 1-1000
+	Rezerwacja() //pseudolosowe generowanie id rezerwacji. zakres 1-1000
+	{ 
         srand(time(0));
         id_rezerwacji=rand()%1000+1; 
     }
-	void utworz_rezerwacje(){   //dziala 
+	void utworz_rezerwacje() //dziala   chuja
+	{   
 		string standard_pokoju, imie_goscia, nazwisko_goscia; 
 		int i = 0;
-		cout<<"Podaj imie: "; cin >> imie_goscia;
-		cout<<"Podaj nazwisko: "; cin >> nazwisko_goscia;
-		for(;;){
-			cout<<"Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; cin >> standard_pokoju;
+		cout << endl << "\t---Tworzenie rezerwacji---" << endl;
+		cout << "Podaj imie: "; cin >> imie_goscia;
+		cout << "Podaj nazwisko: "; cin >> nazwisko_goscia;
+		for(;;)
+		{
+			cout << "Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; cin >> standard_pokoju;
 			transform(standard_pokoju.begin(), standard_pokoju.end(), standard_pokoju.begin(), ::tolower);
-			if(standard_pokoju!="standard" && standard_pokoju!="studio" && standard_pokoju!="premium")
+			if(standard_pokoju != "standard" && standard_pokoju != "studio" && standard_pokoju != "premium")
 			{
-				cout<<"Taki standard nie istnieje. Chcesz wybrać ponownie, podaj 1.\n";
-				cin>>i;
+				cout << "Taki standard nie istnieje. Chcesz wybrać ponownie, podaj 1.\n";
+				cin >> i;
 				if(i!=1)
 	           		return;
 				else	
 					continue;
-			}else	
+			}
+			else	
 				break;
 		}
-		for (;;) 
+		for(;;) 
 		{
         	cout << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
         	cin >> poczatek_rezerwacji;
-        	if (!poprawna_data(poczatek_rezerwacji)) 
-           		cout<<endl<<"Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR"<<endl;
+        	if(!poprawna_data(poczatek_rezerwacji)) 
+           		cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
          	else 
             	break;
         }
-		for (;;) 
+		for(;;) 
 		{
         	cout << "Podaj koniec rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
         	cin >> koniec_rezerwacji;
-        	if (!poprawna_data(koniec_rezerwacji))
-            	cout<<endl<<"Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR"<<endl;
+        	if(!poprawna_data(koniec_rezerwacji))
+            	cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
         	else 
             	break;
         }
-
-		cout<<"Rezerwacja utworzona pomyslnie!"<<endl;
+		cout << "Rezerwacja utworzona pomyslnie!" << endl;
 		ostringstream oss;
-        	oss<<left<<setw(20)<<id_rezerwacji<<setw(15)<<(imie_goscia.size()>18 ? imie_goscia.substr(0, 17)+"." : imie_goscia)
-        	<<setw(20)<<(nazwisko_goscia.size()>18 ? nazwisko_goscia.substr(0, 17)+"." : nazwisko_goscia)<<setw(20)<<standard_pokoju
-			<<setw(20)<<poczatek_rezerwacji<<setw(20)<<koniec_rezerwacji;
-        	dane+=oss.str()+"\n";
-			cout<<left;  
-			cout<<setw(20)<<"ID Rezerwacji"<<setw(15)<<"Imie"<<setw(20)<<"Nazwisko"<<setw(20)<<"Standard"<<setw(20)<<"Poczatek"<<setw(20)<<"Koniec"<<endl;
-			cout<<string(110, '-')<<endl;
-			cout<<dane;
+        	oss << left << setw(20) << id_rezerwacji << setw(15) << (imie_goscia.size() > 18 ? imie_goscia.substr(0, 17) + "." : imie_goscia)
+        	<< setw(20) << (nazwisko_goscia.size() > 18 ? nazwisko_goscia.substr(0, 17) + "." : nazwisko_goscia) << setw(20) << standard_pokoju
+			<< setw(20) << poczatek_rezerwacji << setw(20) << koniec_rezerwacji;
+        	dane += oss.str() + "\n";
+			cout << left;  
+			cout << setw(20) << "ID Rezerwacji" << setw(15) << "Imie" << setw(20) << "Nazwisko" << setw(20) << "Standard" << setw(20) << "Poczatek" << setw(20) 
+			<< "Koniec" << endl;
+			cout << string(110, '-') << endl;
+			cout << dane;
 	}
-	void usun_rezerwacje(const double& id_rezerwacji){
+	void usun_rezerwacje(const double& id_rezerwacji)
+	{
 
 	}
-	void aktualizuj_rezerwacje(const double& id_rezerwacji){
+	void aktualizuj_rezerwacje(const double& id_rezerwacji)
+	{
 
 	}
 };
 
-class Rachunek{
+class Rachunek
+{
 	double kwota;
 	string data_wystawienia, data_platnosci;
 public:
 	void wyswietl_id_rezerwacji(const Rezerwacja& rezerwacja) {} // uzycie gettera
-	void utworz_rachunek(const string& data_wystawienia, const string& data_platnosci, int czas_pobytu) {
-		cout << "Rachunek klienta: "<<endl;
-
+	void utworz_rachunek(const string& data_wystawienia, const string& data_platnosci, int czas_pobytu) 
+	{
+		cout << "Rachunek klienta: "<< endl;
 	}
-	int zaplac(double& kwota) {  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		cout<< "Kwota do zaplaty: "<<kwota<<endl;
+	int zaplac(double& kwota)        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	{  
+		cout << "Kwota do zaplaty: " << kwota << endl;
 		return 0;
 	}
 
 };
 
-//class Administrator_systemu {
+//class Administrator_systemu{
 	//double id_administratora;
 	/*void zarzadzaj_permisjami(const id_administratora, string login, string haslo, string permisje) { //dokonczyc koncowka
 		cout << "Podaj ID administratora: " << endl;
@@ -177,8 +196,7 @@ public:
 		cout << endl << "Aktualne permisje po zmianie: " << permisje[0] << "-" << permisje[1] << "-" << permisje[2] << endl;
 		cout << "Zmiany wprowadzone i zapisane pomyslnie!" << endl;
 		return;
-	}*/
-/*	Administrator_systemu(){ //pseudolosowe generowanie id rezerwacji. zakres 1-1000
+	}	Administrator_systemu(){ //pseudolosowe generowanie id rezerwacji. zakres 1-1000
         srand(time(0));
         id_rezerwacji=rand()%1000+1; 
     }
@@ -208,8 +226,8 @@ public:
 	}
 };*/
 
-/*
-class I_menadzer_rezerwacji {
+
+/*class I_menadzer_rezerwacji {
 public:
 	virtual void stworz_rezerwacje(int id_goscia, Rezerwacja rezerwacja) = 0;
 	virtual void anuluj_rezerwacje(int id_rezerwacji) = 0;
@@ -217,7 +235,6 @@ public:
 	virtual vector<Rezerwacja> wyswietl_rezerwacje(int id_goscia) = 0;
 	virtual ~I_menadzer_rezerwacji() = default;  //wirtualny destruktor
 };
-*//*
 class Menadzer_rezerwacji : public I_menadzer_rezerwacji {	  //klucz: id_goscia, hash-table na wartosci klucz-gosc
 	unordered_map<int, vector<Rezerwacja>> rezerwacje-mapa;  //z biblioteki <unordered_map> funckja dzialajaca jak powyzej
 public:
@@ -260,7 +277,7 @@ public:
 
 	}
 };
-
+*//*
 class Menadzer_hotelu : public Pracownik{
 	weryfikuj_rezerwacje(const int& id_rezerwacji, string status_rezerwacji) {
 
@@ -316,13 +333,15 @@ protected:
 	}
 };*/
 
-class Hotel{ //klasa wstepnie skonczona - dziala
+class Hotel //klasa wstepnie skonczona - dziala
+{ 
 public:
 	const static string nazwa, adres;
 	const static float l_gwiazdek;
 	int liczba_pokoi[3];
-	int wyswietl_informacje_o_hotelu(const float& l_gwiazdek, const string& nazwa, const string& adres) {  // metoda dziala
-		cout<<"\t---Wyswietlanie informacji o hotelu---"<<endl;
+	int wyswietl_informacje_o_hotelu(const float& l_gwiazdek, const string& nazwa, const string& adres) // metoda dziala
+	{  
+		cout << "\n\t---Wyswietlanie informacji o hotelu---" << endl;
 		cout << "Nazwa: " << nazwa << endl;
 		cout << "Adres: " << adres << endl;
 		cout << "Liczba gwiazdek: ";
@@ -331,32 +350,45 @@ public:
 		cout << endl;
 		return 0;
 	}
-	int wyswietl_dostepne_pokoje() {
-	    int i=0;
+	int wyswietl_dostepne_pokoje() 
+	{
+	    int i = 0;
 		srand(time(NULL));
-		for (int i = 0; i < 3; ++i) {
+		for(int i = 0; i < 3; ++i) 
+		{
             liczba_pokoi[i] = rand() % 123 + 1;
         }
-	    wybor:
-		cout<<"\t---wyswietlanie dostepnych hoteli---"<<endl;
+		cout << "\t---wyswietlanie dostepnych hoteli---" << endl;
 	    cout << "Podaj standard pokoju, gdzie 0-standard, 1-studio i 2-premium: " << endl;
 	    cin >> i;
-		switch(i){
+		switch(i)
+		{
 			case 0:
+				if(liczba_pokoi[0]==0)
+				{
+					cout << "Brak dostepnych pokoi w tym standardzie! " << endl << endl;
+					return 0;
+				}
 				cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi[0] << endl << endl;
 				return 0;
 			case 1:
+				if(liczba_pokoi[1]==0)
+				{
+					cout << "Brak dostepnych pokoi w tym standardzie! " << endl << endl;
+					return 0;
+				}
 				cout << "Liczba dostepnych pokoi 'studio': " << liczba_pokoi[1] << endl << endl;
 				return 0;
 			case 2:
+				if(liczba_pokoi[2]==0)
+				{
+					cout << "Brak dostepnych pokoi w tym standardzie! " << endl;
+					return 0;
+				}
 				cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi[2] << endl << endl;
 				return 0;
 			default:
-				cout << "Podano niepoprawną wartość! Chcesz wybrac ponownie wpisz 1." << endl << endl;
-	        	cin >> i; 
-	        	if(i == 1)
-	            	goto wybor; 
-				else
+				cout << "Podano niepoprawną wartość!" << endl << endl;
 	            	return 0;
 		};
 	}
@@ -365,19 +397,21 @@ public:
 
 int main()
 {
-	//Hotel h;
-	//h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
-	//cout<<endl<<endl;
-	//h.wyswietl_dostepne_pokoje();
-	
+	Hotel h;
+	h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
+	cout << endl << endl;
+	h.wyswietl_dostepne_pokoje();
+
 	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
-    vector<string> wyniki = hotel.zobacz_oferty_hoteli("Polska", 3);
+    vector<string> wyniki = hotel.zobacz_oferty_hoteli("Polska", 3);  // filtr dotyczacy gwiazdek naprawic
     for(const string& wynik : wyniki)
-        cout<<wynik<<endl;
+        cout << wynik << endl;
+	cout << endl;
 
 
-	//Rezerwacja r;
-	//r.utworz_rezerwacje();
+	Rezerwacja r;
+	r.utworz_rezerwacje();
+	
 
 	return 0;
 }
