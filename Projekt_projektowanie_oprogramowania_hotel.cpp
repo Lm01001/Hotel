@@ -12,8 +12,14 @@
 #include <ctime>
 #include <sstream>
 #include <sqlite3.h>
+#include <chrono>
+#include <thread>
 
 using namespace std; // kompilacja:  g++ -std=c++11 -o hotel_program Projekt_projektowanie_oprogramowania_hotel.cpp -lsqlite3
+void czekaj(int s) {
+    std::this_thread::sleep_for(std::chrono::seconds(s)); // Wstrzymanie na 'sekundy' sekund
+}
+
 
 class Gosc
 {
@@ -98,20 +104,22 @@ public:
     }
 	void utworz_rezerwacje() //dziala   chuja
 	{   
-		string standard_pokoju, imie_goscia, nazwisko_goscia; 
-		int i = 0;
+		string standard_pokoju, imie_goscia, nazwisko_goscia, i = "0"; 
 		cout << endl << "\t---Tworzenie rezerwacji---" << endl;
-		cout << "Podaj imie: "; cin >> imie_goscia;
-		cout << "Podaj nazwisko: "; cin >> nazwisko_goscia;
+		cout << "Podaj imie: "; getline(cin,imie_goscia); //cin zmieniony na getline() ze wzgledu pomijania 
+		//string imie_goscia = read<string>("imie: ");
+		cout << "Podaj nazwisko: "; getline(cin,nazwisko_goscia);
+		//string nazwisko_goscia = read<string>("nazw: ");
 		for(;;)
 		{
-			cout << "Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; cin >> standard_pokoju;
+			cout << "Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; getline(cin,standard_pokoju);
 			transform(standard_pokoju.begin(), standard_pokoju.end(), standard_pokoju.begin(), ::tolower);
 			if(standard_pokoju != "standard" && standard_pokoju != "studio" && standard_pokoju != "premium")
 			{
 				cout << "Taki standard nie istnieje. Chcesz wybrać ponownie, podaj 1.\n";
-				cin >> i;
-				if(i!=1)
+				getline(cin, i);
+				int i2 = stoi(i);
+				if(i2 != 1)
 	           		return;
 				else	
 					continue;
@@ -400,14 +408,17 @@ int main()
 	Hotel h;
 	h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
 	cout << endl << endl;
+	czekaj(2);
 	h.wyswietl_dostepne_pokoje();
+	czekaj(2);
+
 
 	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
     vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3);  // filtr dotyczacy gwiazdek naprawic
     for(const string& wynik : wyniki)
         cout << wynik << endl;
 	cout << endl;
-
+	czekaj(2);
 
 	Rezerwacja r;
 	r.utworz_rezerwacje();
