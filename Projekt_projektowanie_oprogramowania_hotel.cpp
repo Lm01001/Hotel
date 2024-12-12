@@ -403,7 +403,7 @@ int main()
 	h.wyswietl_dostepne_pokoje();
 
 	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
-    vector<string> wyniki = hotel.zobacz_oferty_hoteli("Polska", 3);  // filtr dotyczacy gwiazdek naprawic
+    vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3);  // filtr dotyczacy gwiazdek naprawic
     for(const string& wynik : wyniki)
         cout << wynik << endl;
 	cout << endl;
