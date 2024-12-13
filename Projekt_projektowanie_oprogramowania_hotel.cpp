@@ -16,8 +16,10 @@
 #include <thread>
 
 using namespace std; // kompilacja:  g++ -std=c++11 -o hotel_program Projekt_projektowanie_oprogramowania_hotel.cpp -lsqlite3
-void czekaj(int s) {
-    std::this_thread::sleep_for(std::chrono::seconds(s)); // Wstrzymanie na 'sekundy' sekund
+
+void czekaj(int s) 
+{
+    this_thread::sleep_for(chrono::seconds(s)); // Wstrzymanie na 'sekundy' programu
 }
 
 
@@ -80,8 +82,8 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
 
 class Rezerwacja
 {
-	double id_rezerwacji;
 	string poczatek_rezerwacji, koniec_rezerwacji, dane;
+	double id_rezerwacji;
 public:
 	bool poprawna_data(const string& data)
 	{
@@ -100,7 +102,14 @@ public:
 	Rezerwacja() //pseudolosowe generowanie id rezerwacji. zakres 1-1000
 	{ 
         srand(time(0));
-        id_rezerwacji=rand()%1000+1; 
+        id_rezerwacji+=rand()%1000+1; 
+    }
+	tm string_do_tm(const string& data)
+    {
+        tm t = {};
+        istringstream ss(data);
+        ss >> get_time(&t, "%d-%m-%Y");
+        return t;
     }
 	void utworz_rezerwacje() //dziala
 	{   
@@ -145,12 +154,31 @@ public:
 			cout << string(110, '-') << endl;
 			cout << dane;
 	}
-	void usun_rezerwacje(const double& id_rezerwacji)
-	{
+	int oblicz_czas_pobytu()
+    {
+        tm poczatek = string_do_tm(poczatek_rezerwacji);
+        tm koniec = string_do_tm(koniec_rezerwacji);
 
-	}
+        // Konwersja na czas unixowy (sekundy od 1970-01-01)
+        time_t t_poczatek = mktime(&poczatek);
+        time_t t_koniec = mktime(&koniec);
+
+        // Różnica w sekundach
+        double roznica = difftime(t_koniec, t_poczatek);
+        int dni_pobytu = roznica / (60 * 60 * 24);  // Przekształcenie sekund na dni
+        return dni_pobytu;
+    }
+	/*void usun_rezerwacje(){
+		cout << endl << "\t---Usuwanie rezerwacji---" << endl;
+		id_rezerwacji.clear();
+		if(id_rezerwacji != " ")
+			cout << "Rezerwacja usunięta pomyślnie."<<endl;
+		exit(0);
+
+	}*/
 	void aktualizuj_rezerwacje(const double& id_rezerwacji)
 	{
+		cout << endl << "\t---Aktualizowanie rezerwacji---" << endl;
 
 	}
 };
@@ -161,12 +189,15 @@ class Rachunek
 	string data_wystawienia, data_platnosci;
 public:
 	void wyswietl_id_rezerwacji(const Rezerwacja& rezerwacja) {} // uzycie gettera
-	void utworz_rachunek(const string& data_wystawienia, const string& data_platnosci, int czas_pobytu) 
+	void utworz_rachunek(string& data_wystawienia, string& data_platnosci, int czas_pobytu) 
 	{
+		cout << endl << "\t---Tworzenie rachunku---" << endl;
 		cout << "Rachunek klienta: "<< endl;
+		cout << "";
 	}
 	int zaplac(double& kwota)        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	{  
+		cout << endl << "\t---Należna kwota za pobyt---" << endl;
 		cout << "Kwota do zaplaty: " << kwota << endl;
 		return 0;
 	}
@@ -394,7 +425,7 @@ public:
 int main()
 {
 	Hotel h;
-	h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
+	h.wyswietl_informacje_o_hotelu(4, "Hotel na potrzeby projektu", "ul. Konieczna 4");
 	cout << endl << endl;
 	czekaj(1);
 	h.wyswietl_dostepne_pokoje();
@@ -407,8 +438,19 @@ int main()
 	cout << endl;
 	czekaj(1);
 
-	Rezerwacja r;
-	r.utworz_rezerwacje();
+	Rezerwacja rez;
+	rez.utworz_rezerwacje();
+	int czas_pobytu = rez.oblicz_czas_pobytu();
+	cout<<endl;
+	czekaj(1);
+	
+	Rachunek rach;
+	//rach.utworz_rachunek();
+	czekaj(1);
+	double cena_za_dobe = 100.0;  // Przykładowa cena za dobę
+	double kwota = cena_za_dobe * czas_pobytu;
+	rach.zaplac(kwota);
+	czekaj(1);
 	
 
 	return 0;
