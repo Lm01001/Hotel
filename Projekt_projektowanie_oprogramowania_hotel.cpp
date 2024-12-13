@@ -102,35 +102,23 @@ public:
         srand(time(0));
         id_rezerwacji=rand()%1000+1; 
     }
-	void utworz_rezerwacje() //dziala   chuja
+	void utworz_rezerwacje() //dziala
 	{   
-		string standard_pokoju, imie_goscia, nazwisko_goscia, i = "0"; 
+		string standard_pokoju, imie_goscia, nazwisko_goscia;
+		int i=0;
 		cout << endl << "\t---Tworzenie rezerwacji---" << endl;
-		cout << "Podaj imie: "; getline(cin,imie_goscia); //cin zmieniony na getline() ze wzgledu pomijania 
-		//string imie_goscia = read<string>("imie: ");
-		cout << "Podaj nazwisko: "; getline(cin,nazwisko_goscia);
-		//string nazwisko_goscia = read<string>("nazw: ");
-		for(;;)
-		{
-			cout << "Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; getline(cin,standard_pokoju);
-			transform(standard_pokoju.begin(), standard_pokoju.end(), standard_pokoju.begin(), ::tolower);
-			if(standard_pokoju != "standard" && standard_pokoju != "studio" && standard_pokoju != "premium")
-			{
-				cout << "Taki standard nie istnieje. Chcesz wybrać ponownie, podaj 1.\n";
-				getline(cin, i);
-				int i2 = stoi(i);
-				if(i2 != 1)
-	           		return;
-				else	
-					continue;
-			}
-			else	
-				break;
+		cout << "Podaj imie: "; cin>>imie_goscia;
+		cout << "Podaj nazwisko: "; cin>>nazwisko_goscia;
+		cout << "Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; cin>>standard_pokoju;
+		transform(standard_pokoju.begin(), standard_pokoju.end(), standard_pokoju.begin(), ::tolower);
+		if(standard_pokoju != "standard" && standard_pokoju != "studio" && standard_pokoju != "premium"){
+			cout << "Taki standard nie istnieje. Tworzenie rezerwacji zakończone niepowodzeniem!\n";
+			exit(1);
 		}
 		for(;;) 
 		{
         	cout << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
-        	cin >> poczatek_rezerwacji;
+        	cin>>poczatek_rezerwacji;
         	if(!poprawna_data(poczatek_rezerwacji)) 
            		cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
          	else 
@@ -139,7 +127,7 @@ public:
 		for(;;) 
 		{
         	cout << "Podaj koniec rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
-        	cin >> koniec_rezerwacji;
+        	cin>>koniec_rezerwacji;
         	if(!poprawna_data(koniec_rezerwacji))
             	cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
         	else 
@@ -408,17 +396,16 @@ int main()
 	Hotel h;
 	h.wyswietl_informacje_o_hotelu(4, "nazwa", "ul.coscos");
 	cout << endl << endl;
-	czekaj(2);
+	czekaj(1);
 	h.wyswietl_dostepne_pokoje();
-	czekaj(2);
-
+	czekaj(1);
 
 	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
     vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3);  // filtr dotyczacy gwiazdek naprawic
     for(const string& wynik : wyniki)
         cout << wynik << endl;
 	cout << endl;
-	czekaj(2);
+	czekaj(1);
 
 	Rezerwacja r;
 	r.utworz_rezerwacje();
