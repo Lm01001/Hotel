@@ -121,6 +121,12 @@ public:
 	{   
 		string standard_pokoju, imie_goscia, nazwisko_goscia;
 		int i=0;
+		sqlite3* db;
+    		if (sqlite3_open("dane_rezerwacji.db", &db) != SQLITE_OK) 	
+			{
+        		cerr << "Nie można otworzyć bazy danych: " << sqlite3_errmsg(db) << endl;
+        		return;
+    		}
 		cout << endl << "\t---Tworzenie rezerwacji---" << endl;
 		cout << "Podaj imie: "; cin>>imie_goscia;
 		cout << "Podaj nazwisko: "; cin>>nazwisko_goscia;
@@ -169,6 +175,18 @@ public:
 			<< "Koniec" << endl;
 			cout << string(110, '-') << endl;
 			cout << dane;
+			string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji) "
+                 "VALUES (" + to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "');";
+
+    char* err_msg = nullptr;
+    if (sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg) != SQLITE_OK) {
+        cerr << "Błąd podczas zapisu rezerwacji do bazy danych: " << err_msg << endl;
+        sqlite3_free(err_msg);
+    } else {
+        cout << "Rezerwacja została pomyślnie zapisana w bazie danych." << endl;
+    }
+
+    sqlite3_close(db);
 	}
 
 
