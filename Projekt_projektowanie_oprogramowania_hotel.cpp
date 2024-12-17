@@ -127,11 +127,11 @@ public:
 		string standard_pokoju, imie_goscia, nazwisko_goscia;
 		int i=0;
 		sqlite3* db;
-    		if (sqlite3_open("dane_rezerwacji.db", &db) != SQLITE_OK) 	
-			{
-        		cerr << "Nie można otworzyć bazy danych: " << sqlite3_errmsg(db) << endl;
-        		return;
-    		}
+    	if (sqlite3_open("dane_rezerwacji.db", &db) != SQLITE_OK) 	
+		{
+        	cerr << "Nie można otworzyć bazy danych: " << sqlite3_errmsg(db) << endl;
+        	return;
+    	}
 		cout << endl << "\t---Tworzenie rezerwacji---" << endl;
 		cout << "Podaj imie: "; cin>>imie_goscia;
 		cout << "Podaj nazwisko: "; cin>>nazwisko_goscia;
@@ -153,7 +153,7 @@ public:
 		}
 		for(;;) 
 		{
-        	cout << endl << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
+        	cout << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
         	cin>>poczatek_rezerwacji;
         	if(!poprawna_data(poczatek_rezerwacji)) 
            		cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
@@ -180,15 +180,14 @@ public:
 			<< "Koniec" << endl;
 			cout << string(110, '-') << endl;
 			cout << dane;
-			zapisz_do_bazy(db, imie_goscia, nazwisko_goscia, standard_pokoju);
-			
-   /*char* err_msg = nullptr;
+			string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji) "
+                    " VALUES (" + to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" 
+					 + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "');";
+    char* err_msg = nullptr;
     if (sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg) != SQLITE_OK) {
-        cerr << "Błąd podczas zapisu rezerwacji do bazy danych: " << err_msg << endl;
+        cerr << endl << "\tBłąd podczas zapisu rezerwacji do bazy danych: " << err_msg << endl;
         sqlite3_free(err_msg);
-    } else {
-        cout << "Rezerwacja została pomyślnie zapisana w bazie danych." << endl;
-    }*/
+    }
 
     sqlite3_close(db);
 	}
@@ -329,14 +328,14 @@ public:
         sqlite3_finalize(stmt); // Zwolnienie zasobów, zamkniecie bazy
         sqlite3_close(db);
 	}
-	void utworz_rachunek() 
+	int utworz_rachunek(double& kwota) 
 	{
 		cout << endl << "\t---Tworzenie rachunku---" << endl;
 		cout << "Rachunek klienta: "<< endl;
 		cout << "  Data wystawienia: " << data_wystawienia << endl;
 		cout << "  Data platnosci: " << data_platnosci << endl;
-		cout << "  Kwota do zaplaty: " << kwota << endl;
-
+		cout << "  Kwota do zaplaty: " << kwota << endl<<endl;
+		return 0;
 	}
 
 
@@ -584,8 +583,8 @@ public:
 
 
 int main()
-{
-	Hotel h;
+{	//poprawic estetyke tych komentarzy
+	Hotel h; // Klasa Hotel		Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
 	h.wyswietl_informacje_o_hotelu(4, "Hotel na potrzeby projektu", "ul. Konieczna 4");
 	cout << endl << endl;
 	czekaj(1);
@@ -594,7 +593,7 @@ int main()
 
 
 	Gosc hotel("data/my_sqlite3_hotele_baza.sqlite3");
-    vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3);  // filtr dotyczacy gwiazdek naprawic
+    vector<string> wyniki = hotel.zobacz_oferty_hoteli("Polska", 3);  // filtr dotyczacy gwiazdek naprawic
     for(const string& wynik : wyniki)
         cout << wynik << endl;
 	cout << endl;
@@ -614,10 +613,10 @@ int main()
 	Rachunek rach;
 	//int id_rezerwacji = rach.getIdRezerwacji();
 	//rach.pobierzDaneZBazy(id_rezerwacji);
-	rach.utworz_rachunek();
-	czekaj(1);
 	double cena_za_dobe = 100.0;  // Ustawiona domyslnie cena za dobę
 	double kwota = cena_za_dobe * czas_pobytu;
+	rach.utworz_rachunek(kwota);
+	czekaj(1);
 	rach.zaplac(czas_pobytu, kwota);
 	czekaj(1);
 	
