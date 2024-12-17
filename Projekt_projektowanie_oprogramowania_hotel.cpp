@@ -116,18 +116,12 @@ public:
         return t;
     }
 
-	
-	void zapisz_do_bazy(sqlite3* db, const string& imie_goscia, const string& nazwisko_goscia, const string& standard_pokoju) 
-	{
-        string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji) "
-                     "VALUES (" + to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "');";
-    }
 	void utworz_rezerwacje() //dziala
 	{   
 		string standard_pokoju, imie_goscia, nazwisko_goscia;
 		int i=0;
 		sqlite3* db;
-    	if (sqlite3_open("dane_rezerwacji.db", &db) != SQLITE_OK) 	
+    	if (sqlite3_open("dane_rezerwacji.sqlite3", &db) != SQLITE_OK) 	
 		{
         	cerr << "Nie można otworzyć bazy danych: " << sqlite3_errmsg(db) << endl;
         	return;
@@ -180,15 +174,15 @@ public:
 			<< "Koniec" << endl;
 			cout << string(110, '-') << endl;
 			cout << dane;
-			string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji) "
-                    " VALUES (" + to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" 
-					 + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "');";
+			string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji) VALUES (" + to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "');";
     char* err_msg = nullptr;
     if (sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg) != SQLITE_OK) {
-        cerr << endl << "\tBłąd podczas zapisu rezerwacji do bazy danych: " << err_msg << endl;
+        cerr << endl << endl << "\tBłąd podczas zapisu rezerwacji do bazy danych: " << err_msg << endl;
         sqlite3_free(err_msg);
     }
-
+	string fetch_last_sql = "SELECT * FROM Rezerwacje ORDER BY id_rezerwacji DESC LIMIT 1;";
+	//Rachunek id;
+	//id.metodarezerwacja();
     sqlite3_close(db);
 	}
 
@@ -209,7 +203,7 @@ public:
         return dni_pobytu;
     }
 
-	/*void usun_rezerwacje(){
+	/*void usun_rezerwacje(){               //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		cout << endl << "\t---Usuwanie rezerwacji---" << endl;
 		id_rezerwacji.clear();
 		if(id_rezerwacji != " ")
@@ -220,7 +214,7 @@ public:
 	void aktualizuj_rezerwacje()
 	{
 		int a;
-		cout << endl << "\t---Aktualizowanie rezerwacji---" << endl;
+		cout << endl << endl << "\t---Aktualizowanie rezerwacji---" << endl;
 		cout << "Czy na pewno chcesz zaktualizowac calkowicie rezerwacje?  1 - tak, 0 - nie" << endl;
 		cin >> a;
 		string standard_pokoju, imie_goscia, nazwisko_goscia;
@@ -276,75 +270,47 @@ class Rachunek
 	string data_wystawienia, data_platnosci;
 	int id_rezerwacji;
 public:
-	int getIdRezerwacji() const 
-	{
-        return id_rezerwacji;
-    }
-	void wyswietl_id_rezerwacji(const Rezerwacja& rezerwacja) {} // uzycie gettera
-	
-   	void pobierzDaneZBazy(int id_rezerwacji) 
-	{
-        sqlite3* db;
-        sqlite3_stmt* stmt;
-        const char* db_name = "/workspaces/Hotel/Projekt_program_cpp/data/dane_rezerwacji.db";  // Nazwa bazy danych
-        if (sqlite3_open(db_name, &db)) 
-		{
-            cerr << "Nie udało się otworzyć bazy danych: " << sqlite3_errmsg(db) << endl;
-            return;
-        }
-   	
-        stringstream ss;
-        ss << "SELECT id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji FROM Rezerwacja WHERE id_rezerwacji = " << id_rezerwacji << ";";
-        string sql = ss.str();
-
-        // Przygotowanie zapytania
-        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-            cerr << "Błąd podczas przygotowywania zapytania: " << sqlite3_errmsg(db) << endl;
-            sqlite3_close(db);
-            return;
-        }
-
-        // Wykonanie zapytania i przypisanie wyników do zmiennych
-        if (sqlite3_step(stmt) == SQLITE_ROW) 
-		{
-            int id_rezerwacji = sqlite3_column_int(stmt, 0);  // Przypisanie wyników do zmiennych
-            const char* imie = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-            const char* nazwisko = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-            const char* standard_pokoju = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
-            const char* poczatek_rezerwacji = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
-            const char* koniec_rezerwacji = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5));
-            cout << "Dane rezerwacji:" << endl; // Wyświetlenie danych
-            cout << "ID Rezerwacji: " << id_rezerwacji << endl;
-            cout << "Imię: " << imie << endl;
-            cout << "Nazwisko: " << nazwisko << endl;
-            cout << "Standard pokoju: " << standard_pokoju << endl;
-            cout << "Początek rezerwacji: " << poczatek_rezerwacji << endl;
-            cout << "Koniec rezerwacji: " << koniec_rezerwacji << endl;
-            this->data_wystawienia = poczatek_rezerwacji;  // data wystawienia rachunku
-            this->data_platnosci = koniec_rezerwacji;     // data płatności za pobyt
-        }else{
-            cout << "Nie znaleziono rezerwacji o ID: " << id_rezerwacji << endl;
-        }
-        sqlite3_finalize(stmt); // Zwolnienie zasobów, zamkniecie bazy
-        sqlite3_close(db);
-	}
 	int utworz_rachunek(double& kwota) 
 	{
-		cout << endl << "\t---Tworzenie rachunku---" << endl;
-		cout << "Rachunek klienta: "<< endl;
-		cout << "  Data wystawienia: " << data_wystawienia << endl;
-		cout << "  Data platnosci: " << data_platnosci << endl;
-		cout << "  Kwota do zaplaty: " << kwota << endl<<endl;
-		return 0;
-	}
+    	sqlite3* db;
+		sqlite3_stmt *stmt;
+    	if (sqlite3_open("dane_rezerwacji.sqlite3", &db) != SQLITE_OK) 
+		{
+        	cerr << "Niepowodzenie przy pobieraniu danych: " << sqlite3_errmsg(db) << endl;
+        	return 0;
+    	}
+    	const char *sql = "SELECT id_rezerwacji, poczatek_rezerwacji, koniec_rezerwacji FROM Rezerwacje ORDER BY id_rezerwacji DESC LIMIT 1;"; //ASC LIMIT 1 OFFSET 1   ORDER BY id_rezerwacji DESC LIMIT 1
+    	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+    	if(rc != SQLITE_OK) 
+		{
+        	cerr << "Nie udało się przygotować zapytania: " << sqlite3_errmsg(db) << endl;
+        	return 0;
+    	}
+    	rc = sqlite3_step(stmt);
+    	if(rc == SQLITE_ROW) 
+		{
+        	int id_rezerwacji = sqlite3_column_int(stmt, 0);  // indeks 0 dla pierwszej kolumny
+        	const char *poczatek_rezerwacji = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+        	const char *koniec_rezerwacji = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2)); 
+        	string poczatek_rez(poczatek_rezerwacji);
+        	string koniec_rez(koniec_rezerwacji);
+        	cout << endl << "\t---Tworzenie rachunku---" << endl;
+        	cout << "Rachunek klienta: "<< endl;
+        	cout << "  ID rezerwacji: " << id_rezerwacji << endl << "  Data wystawienia: " << poczatek_rez << endl;
+        	cout << "  Data platnosci: " << koniec_rez << endl << "  Kwota do zapłaty: " << kwota << endl << endl;
+    	}else 
+        	cerr << "Blad przy pobieraniu danych." << endl;
+    	sqlite3_finalize(stmt); // zwalnianie zasobow, zamykanie bazy danych
+    	sqlite3_close(db);
+    	return 1;    
+}
 
-
-	int zaplac(int czas_pobytu, double& kwota)        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	int zaplac(int czas_pobytu, double& kwota)    
 	{  
 		cout << endl << "\t---Należna kwota za pobyt---" << endl;
-		cout << "Dlugosc pobytu: " << czas_pobytu << endl;
+		cout << "Dlugosc pobytu: " << czas_pobytu << " dni" << endl;
 		cout << "Kwota do zaplaty: " << kwota << endl;
-		return 0;
+		return 1;
 	}
 };
 
@@ -584,7 +550,7 @@ public:
 
 int main()
 {	//poprawic estetyke tych komentarzy
-	Hotel h; // Klasa Hotel		Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
+	/*Hotel h; // Klasa Hotel		Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
 	h.wyswietl_informacje_o_hotelu(4, "Hotel na potrzeby projektu", "ul. Konieczna 4");
 	cout << endl << endl;
 	czekaj(1);
@@ -597,8 +563,7 @@ int main()
     for(const string& wynik : wyniki)
         cout << wynik << endl;
 	cout << endl;
-	czekaj(1);
-
+	czekaj(1);*/
 
 	Rezerwacja rez;
 	rez.utworz_rezerwacje();
@@ -611,8 +576,6 @@ int main()
 	
 
 	Rachunek rach;
-	//int id_rezerwacji = rach.getIdRezerwacji();
-	//rach.pobierzDaneZBazy(id_rezerwacji);
 	double cena_za_dobe = 100.0;  // Ustawiona domyslnie cena za dobę
 	double kwota = cena_za_dobe * czas_pobytu;
 	rach.utworz_rachunek(kwota);
