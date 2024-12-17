@@ -116,7 +116,12 @@ public:
         return t;
     }
 
-
+	
+	void zapisz_do_bazy(sqlite3* db, const string& imie_goscia, const string& nazwisko_goscia, const string& standard_pokoju) 
+	{
+        string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji) "
+                     "VALUES (" + to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "');";
+    }
 	void utworz_rezerwacje() //dziala
 	{   
 		string standard_pokoju, imie_goscia, nazwisko_goscia;
@@ -175,20 +180,20 @@ public:
 			<< "Koniec" << endl;
 			cout << string(110, '-') << endl;
 			cout << dane;
-			string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji) "
-                 "VALUES (" + to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "');";
-
-    char* err_msg = nullptr;
+			zapisz_do_bazy(db, imie_goscia, nazwisko_goscia, standard_pokoju);
+			
+   /*char* err_msg = nullptr;
     if (sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg) != SQLITE_OK) {
         cerr << "Błąd podczas zapisu rezerwacji do bazy danych: " << err_msg << endl;
         sqlite3_free(err_msg);
     } else {
         cout << "Rezerwacja została pomyślnie zapisana w bazie danych." << endl;
-    }
+    }*/
 
     sqlite3_close(db);
 	}
 
+	~Rezerwacja() {}
 
 	int oblicz_czas_pobytu()
     {
@@ -607,8 +612,8 @@ int main()
 	
 
 	Rachunek rach;
-	int id_rezerwacji = rach.getIdRezerwacji();
-	rach.pobierzDaneZBazy(id_rezerwacji);
+	//int id_rezerwacji = rach.getIdRezerwacji();
+	//rach.pobierzDaneZBazy(id_rezerwacji);
 	rach.utworz_rachunek();
 	czekaj(1);
 	double cena_za_dobe = 100.0;  // Ustawiona domyslnie cena za dobę
