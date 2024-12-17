@@ -1,0 +1,29 @@
+name: C++ CI and Test Workflow
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Testy jednostkowe
+    - uses: actions/checkout@v4
+    - name: Konfiguracja i instalacja
+      run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build
+    - name: Konfiguracja i build
+      run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build
+    - name: Testowanie
+      run: |
+          cd build
+          ctest --output-on-failure
+  
