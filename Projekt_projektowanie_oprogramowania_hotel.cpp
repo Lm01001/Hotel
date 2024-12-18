@@ -374,7 +374,8 @@ public:
 	}
 };
 
-//class Administrator_systemu{
+//class Administrator_systemu
+{
 	//double id_administratora;
 	/*void zarzadzaj_permisjami(const id_administratora, string login, string haslo, string permisje) { //dokonczyc koncowka
 		cout << "Podaj ID administratora: " << endl;
@@ -424,7 +425,8 @@ public:
 };*/
 
 
-/*class I_menadzer_rezerwacji {
+/*class I_menadzer_rezerwacji 
+{
 public:
 	virtual void stworz_rezerwacje(int id_goscia, Rezerwacja rezerwacja) = 0;
 	virtual void anuluj_rezerwacje(int id_rezerwacji) = 0;
@@ -441,7 +443,8 @@ public:
 	vector<Rezerwacja> wyswietlRezerwacje(int id_goscia) override {}
 };
 
-class Pokoj{
+class Pokoj
+{
 	int numer;
 	bool dostepnosc;
 public:
@@ -457,8 +460,9 @@ public:
 
 	}
 };
-
-class Pracownik{
+*/
+class Pracownik
+{
 protected:
 	string imie, nazwisko, rola;
 	double id_pracownika;
@@ -467,16 +471,20 @@ public:
 	Pracownik (int nazw) : nazwisko (nazw) {}   //dziedziczenie elementow protected 
 	Pracownik (int rol) : rola (rol) {}
 	Pracownik (int id_prac) : id_pracownika (id_prac) {}
-	aktualizuj_dostepnosc(int id_rezerwacji, int numer_pokoju) {
+	aktualizuj_dostepnosc(int id_rezerwacji, int numer_pokoju) 
+	{
 
 	}
-	zarejstruj_godziny_pracy(double poczatek_pracy, double koniec_pracy) {//czy trzeba wgl??????
+	zarejstruj_godziny_pracy(double poczatek_pracy, double koniec_pracy) 
+	{
 
 	}
 };
-*//*
-class Menadzer_hotelu : public Pracownik{
-	weryfikuj_rezerwacje(const int& id_rezerwacji, string status_rezerwacji) {
+/*
+class Menadzer_hotelu : public Pracownik
+{
+	weryfikuj_rezerwacje(const int& id_rezerwacji, string status_rezerwacji) 
+	{
 
 	}
 public:
@@ -484,22 +492,27 @@ public:
 	Menadzer_hotelu (int nazw) : Pracownik (nazw) {}
 	Menadzer_hotelu (int rol) : Pracownik (rol) {}
 	Menadzer_hotelu (int id_prac) : Pracownik (id_prac) {}
-	void utworz_raport(double& id_pracownika, double& poczatek_pracy, double& koniec_pracy) {
+	void utworz_raport(double& id_pracownika, double& poczatek_pracy, double& koniec_pracy) 
+	{
 
 	}
-	void zarzadzaj_personelem(double& id_pracownika, string aktualne_zadanie) {
+	void zarzadzaj_personelem(double& id_pracownika, string aktualne_zadanie) 
+	{
 
 	}
 };
 
-class System_hotelowy{
+class System_hotelowy
+{
 	double wersja_oprogramowania_sys;             //czy cos ponizej??
-	void konfiguruj_ustawienia_systemowe() {
+	void konfiguruj_ustawienia_systemowe() 
+	{
 
 	}
 protected:
 	void sprawdz_logi_systemu(bool awaria, double czas_zdarzenia, double id_uzytkownika, string okolicznosci_zdarzenia,
-		 string poziom_logu) { //idk czy trzeba???
+		 string poziom_logu) //idk czy trzeba???
+		{ 
 		if (!awaria)
 		{
 			cout << "Brak awarii. Konczenie procesu." << endl;
@@ -513,14 +526,16 @@ protected:
 			return 0;
 		}
 	}
-	int zamelduj_goscia(double id_goscia, int id_rezerwacji) { //mozna by zrobic unordered map i dac
-	unordered_map<double id-goscia, int id_rezerwacji> gosc-rezerwacja; //gosc jako klucz id rezerwacji sprawdzic  !!!!!!
-	if (!id_goscia || !id_rezerwacji)  
-		return 0;
-	else
-		return 1;
+	int zamelduj_goscia(double id_goscia, int id_rezerwacji) // mozna by zrobic unordered map i dac 
+	{ 
+		unordered_map<double id-goscia, int id_rezerwacji> gosc-rezerwacja; //gosc jako klucz id rezerwacji sprawdzic  !!!!!!
+		if (!id_goscia || !id_rezerwacji)  
+			return 0;
+		else
+			return 1;
 	}
-	int wymelduj_goscia(double id_goscia, double dodatkowe_oplaty) {
+	int wymelduj_goscia(double id_goscia, double dodatkowe_oplaty) 
+	{
 		if(dodatkowe_oplaty != 0)
 		{
 			cout << "Prosba o uregulowanie naleznej kwoty. " << endl;
@@ -609,7 +624,7 @@ public:
 
 int main()
 {	//poprawic estetyke tych komentarzy
-	/*Hotel h; // Klasa Hotel		Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
+	Hotel h; // Klasa Hotel		Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
 	h.wyswietl_informacje_o_hotelu(4, "Hotel na potrzeby projektu", "ul. Konieczna 4");
 	cout << endl << endl;
 	czekaj(1);
@@ -623,7 +638,7 @@ int main()
         cout << wynik << endl;
 	cout << endl;
 	czekaj(1);
-*/
+
 	Rezerwacja rez;
 	rez.utworz_rezerwacje();
 	int czas_pobytu = rez.oblicz_czas_pobytu();
