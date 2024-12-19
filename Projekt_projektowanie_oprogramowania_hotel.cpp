@@ -32,7 +32,7 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
 	Gosc() //pseudolosowe generowanie id goscia. zakres 1-1000
 	{ 
         srand(time(0));
-        id_goscia = rand() % 5000 + 1; //mamy te dane podawane w rezerwacji 
+        id_goscia = rand() % 15000 + 1; //mamy te dane podawane w rezerwacji 
     }  
 	Gosc(const string& db_path)
 	{
@@ -64,8 +64,8 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
             wyniki_vector->push_back(wynik);
             return 0;
         };
-
-       char* error = nullptr;
+		cout << endl;
+       	char* error = nullptr;
         if(sqlite3_exec(db, sql.c_str(), callback, &oferty, &error)!=SQLITE_OK)
 		{
             cerr<<"Błąd podczas wykonywania zapytania: "<<error<< endl;
@@ -228,11 +228,11 @@ public:
 		cout << endl << "\t---Usuwanie rezerwacji---" << endl << "Czy na pewno chcesz usunac swoja rezerwacje? t/n" << endl;
 		cin >> i;
 		if(tolower(i) == 'n')
-			exit(0);
+			return;
 		else if(tolower(i) == 't')
 			cout << "Kontynuacja procesu usuwania rezerwacji" << endl;
 		else
-			exit(1);
+			return;
 
 		sqlite3* db;
     if (sqlite3_open("dane_rezerwacji.sqlite3", &db) != SQLITE_OK) {
@@ -265,7 +265,7 @@ public:
             cout << "Rezerwacja " << id_rezerwacji << " usunięta pomyslnie." << endl;
         }
     }else 
-        cout << "Rezerwacja o takim numerze nie istnieje." << endl;
+        cout << "Rezerwacja o takim numerze nie istnieje." << endl << endl;
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
@@ -316,7 +316,7 @@ public:
 			cout << setw(20) << "ID Rezerwacji" << setw(15) << "Imie" << setw(20) << "Nazwisko" << setw(20) << "Standard" << setw(20) << "Poczatek" << setw(20) 
 			<< "Koniec" << endl;
 			cout << string(110, '-') << endl;
-			cout << dane << endl;
+			cout << dane << endl << endl;
 		} else	
 			return;
 
@@ -369,13 +369,12 @@ public:
 	{  
 		cout << endl << "\t---Należna kwota za pobyt---" << endl;
 		cout << "Dlugosc pobytu: " << czas_pobytu << " dni" << endl;
-		cout << "Kwota do zaplaty: " << kwota << endl;
+		cout << "Kwota do zaplaty: " << kwota << endl << endl;
 		return 1;
 	}
 };
 
-//class Administrator_systemu
-{
+//class Administrator_systemu{
 	//double id_administratora;
 	/*void zarzadzaj_permisjami(const id_administratora, string login, string haslo, string permisje) { //dokonczyc koncowka
 		cout << "Podaj ID administratora: " << endl;
@@ -450,13 +449,16 @@ class Pokoj
 public:
 	string standard;
 	float cena;
-	bool ustaw_status(const int& numer) {
+	bool ustaw_status(const int& numer) 
+	{
 
 	}
-	wyswietl_informacje_pokoju(const int& numer, int id_rezerwacji) {
+	wyswietl_informacje_pokoju(const int& numer, int id_rezerwacji) 
+	{
 
 	}
-	pokaz_dostepnosc_standardu(const bool& dostepnosc, int& numer) {
+	pokaz_dostepnosc_standardu(const bool& dostepnosc, int& numer) 
+	{
 
 	}
 };
@@ -467,18 +469,104 @@ protected:
 	string imie, nazwisko, rola;
 	double id_pracownika;
 public:
-	Pracownik (int im) : imie (im){}            //konstruktory, utworzone w celu umozliwienia klasie menadzer_hotelu
-	Pracownik (int nazw) : nazwisko (nazw) {}   //dziedziczenie elementow protected 
-	Pracownik (int rol) : rola (rol) {}
-	Pracownik (int id_prac) : id_pracownika (id_prac) {}
-	aktualizuj_dostepnosc(int id_rezerwacji, int numer_pokoju) 
+	Pracownik (string& im, string& nazw, string& rol, double& id_prac) : imie(im), nazwisko (nazw), rola(rol){} // konstruktor, utworzony w celu umozliwienia klasie menadzer_hotelu
+	//Pracownik (int nazw) : nazwisko (nazw) {}   //dziedziczenie elementow protected 
+	//Pracownik (int rol) : rola(to_string(rol)) {}
+	//Pracownik (int id_prac) : id_pracownika (id_prac) {}
+	Pracownik() //pseudolosowe generowanie id pracownika. zakres 1-1000
+	{ 
+        srand(time(0));
+        id_pracownika = rand() % 5000 + 1; 
+    } 
+
+	bool poprawna_data(const string& data)
+	{
+    	if(data.size() != 10) return false;
+    	if((data[2] != '-' && data[2] != '.') || (data[5] != '-' && data[5] != '.')) 
+        	return false;
+    	for(int i = 0; i < data.size(); ++i) 
+		{
+       		if (i == 2 || i == 5) 
+				continue;  // pominiecie "oddzielnika"
+        	if (!isdigit(data[i])) 
+				return false;
+    	}
+    	return true;
+	}
+
+	tm string_do_tm(const string& data)
+    {
+        tm t = {};
+        istringstream ss(data);
+        ss >> get_time(&t, "%d-%m-%Y");
+        return t;
+    }
+	
+	void aktualizuj_dostepnosc() // ??? atrybuty  // dodawac numer pokoju?? moze baza danych z losowymi danymi pracownika
+	{
+		string data = " ";
+		cout << endl << "\t---Aktualizacja dostepnosci---" << endl;
+		cout << "Podaj dzisiejsza date (w formacie: DD-MM-RRRR lub DD.MM.RRRR) w celu sprawdzenia mozliwosc zaktualizowania dostepnosci: " << endl; // dodac ilosc standardow jakos wczesniej
+		for(;;) 
+		{
+			cin >> data;
+        	if(!poprawna_data(data))
+            	cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
+        	else 
+            	break;
+        }
+		cout << "\t---Rezerwacje konczace sie w dniu dzisiejszym---" << endl;
+		sqlite3* db;
+		sqlite3_stmt *stmt;
+    	if (sqlite3_open("dane_rezerwacji.sqlite3", &db) != SQLITE_OK) 
+		{
+        	cerr << "Niepowodzenie przy pobieraniu danych: " << sqlite3_errmsg(db) << endl;
+        	return;
+    	}
+    	string sql = "SELECT id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, koniec_rezerwacji FROM Rezerwacje WHERE koniec_rezerwacji = ?;"; 
+    	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
+    	if(rc != SQLITE_OK) 
+		{
+        	cerr << "Nie udało się przygotować zapytania: " << sqlite3_errmsg(db) << endl;
+			sqlite3_close(db);
+        	return;
+    	}
+    	sqlite3_bind_text(stmt, 1, data.c_str(), -1, SQLITE_STATIC);
+		rc = sqlite3_step(stmt);
+    	while(rc == SQLITE_ROW) 
+		{
+			cout << "| " << "id_rezerwacji:  " << sqlite3_column_text(stmt, 0) << " | " << "imie_goscia:  " << sqlite3_column_text(stmt, 1) << " | "
+        	<< "nazwisko_goscia:  " << sqlite3_column_text(stmt, 2) << " | " << "standard_pokoju:  " << sqlite3_column_text(stmt, 3) << " | " << sqlite3_column_text(stmt, 4) << endl;
+			rc = sqlite3_step(stmt);
+    	}
+		cout << "Podaj id rezerwacji, ktora chcesz usunac. " << endl;
+		cin >> data;
+		 rc = sqlite3_step(stmt);
+    	if (rc == SQLITE_ROW) 
+		{
+        	data = sqlite3_column_int(stmt, 0);
+        	string sql = "DELETE FROM Rezerwacje WHERE id_rezerwacji = " + data + ";"; // problem z typem zmiennej
+        	char* err_msg = nullptr;
+       		rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg);
+        	if(rc != SQLITE_OK) 
+			{
+            	cerr << "Niepowodzenie przy usuwaniu! " << err_msg << endl;
+            	sqlite3_free(err_msg);
+        	}else 
+			{
+            	cout << "Rezerwacja " << data << " usunięta pomyslnie." << endl;
+        	}
+    	}else 
+        	cout << "Rezerwacja o takim numerze nie istnieje." << endl << endl;
+    	sqlite3_finalize(stmt); // zwalnianie zasobow, zamykanie bazy danych
+    	sqlite3_close(db);
+    	return; 
+	}
+
+	/*zarejstruj_godziny_pracy(double poczatek_pracy, double koniec_pracy) 
 	{
 
-	}
-	zarejstruj_godziny_pracy(double poczatek_pracy, double koniec_pracy) 
-	{
-
-	}
+	}*/
 };
 /*
 class Menadzer_hotelu : public Pracownik
@@ -559,7 +647,7 @@ public:
 		cout << "Liczba gwiazdek: ";
 		for(int i = 0; i < l_gwiazdek; i++)
 			cout << "*";
-		cout << endl;
+		cout << endl << endl << endl;
 		return 0;
 	}
 	int wyswietl_dostepne_pokoje() 
@@ -626,7 +714,6 @@ int main()
 {	//poprawic estetyke tych komentarzy
 	Hotel h; // Klasa Hotel		Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
 	h.wyswietl_informacje_o_hotelu(4, "Hotel na potrzeby projektu", "ul. Konieczna 4");
-	cout << endl << endl;
 	czekaj(1);
 	h.wyswietl_dostepne_pokoje();
 	czekaj(1);
@@ -636,11 +723,11 @@ int main()
     vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3);  // filtr dotyczacy gwiazdek naprawic
     for(const string& wynik : wyniki)
         cout << wynik << endl;
-	cout << endl;
 	czekaj(1);
 
+
 	Rezerwacja rez;
-	rez.utworz_rezerwacje();
+	rez.utworz_rezerwacje(); //e.h.  poprawnosc daty ograniczenia etc
 	int czas_pobytu = rez.oblicz_czas_pobytu();
 	czekaj(1);
 	rez.aktualizuj_rezerwacje();
@@ -655,9 +742,15 @@ int main()
 	double kwota = cena_za_dobe * czas_pobytu;
 	rach.utworz_rachunek(kwota);
 	czekaj(1);
-	rach.zaplac(czas_pobytu, kwota);
+	rach.zaplac(czas_pobytu, kwota); // nie uwzglednia miesiecy bo 30.01-20.02 to  -10dni
 	czekaj(1);
 	
+
+	string imie = "nie", nazwisko = "tak", stanowisko = "recepcjonista";
+	double id_pracownika = 1234;
+	Pracownik p(imie, nazwisko, stanowisko, id_pracownika);
+	p.aktualizuj_dostepnosc();
+	czekaj(1);
 
 	return 0;
 }
