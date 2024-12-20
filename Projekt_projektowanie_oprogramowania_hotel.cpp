@@ -274,7 +274,7 @@ public:
 	{
 		int a;
 		cout << endl << endl << "\t---Aktualizowanie rezerwacji---" << endl;
-		cout << "Czy na pewno chcesz zaktualizowac calkowicie rezerwacje?  1 - tak, 0 - nie" << endl;
+		cout << "Czy chcesz zaktualizowac calkowicie rezerwacje?  1 - tak, 0 - nie" << endl;
 		cin >> a;
 		string standard_pokoju, imie_goscia, nazwisko_goscia;
 		int i=0;
@@ -374,9 +374,9 @@ public:
 	}
 };
 
-//class Administrator_systemu{
+/*class Administrator_systemu{
 	//double id_administratora;
-	/*void zarzadzaj_permisjami(const id_administratora, string login, string haslo, string permisje) { //dokonczyc koncowka
+	void zarzadzaj_permisjami(const id_administratora, string login, string haslo, string permisje) { //dokonczyc koncowka
 		cout << "Podaj ID administratora: " << endl;
 		cin >> id_administratora;
 		permisje = "rrr";
@@ -423,7 +423,6 @@ public:
 	}
 };*/
 
-
 /*class I_menadzer_rezerwacji 
 {
 public:
@@ -440,9 +439,9 @@ public:
 	void anuluj_rezerwacje(int id_rezerwacji) override {}
 	void aktualizuj_rezerwacje(int id_rezerwacji, Rezerwacja nowa_rezerwacja) override {}
 	vector<Rezerwacja> wyswietlRezerwacje(int id_goscia) override {}
-};
+};*/
 
-class Pokoj
+/*class Pokoj
 {
 	int numer;
 	bool dostepnosc;
@@ -461,8 +460,8 @@ public:
 	{
 
 	}
-};
-*/
+};*/
+
 class Pracownik
 {
 protected:
@@ -504,7 +503,8 @@ public:
 	
 	void aktualizuj_dostepnosc() // ??? atrybuty  // dodawac numer pokoju?? moze baza danych z losowymi danymi pracownika
 	{
-		string data = " ";
+		string data;
+		int usun = 0;
 		cout << endl << "\t---Aktualizacja dostepnosci---" << endl;
 		cout << "Podaj dzisiejsza date (w formacie: DD-MM-RRRR lub DD.MM.RRRR) w celu sprawdzenia mozliwosc zaktualizowania dostepnosci: " << endl; // dodac ilosc standardow jakos wczesniej
 		for(;;) 
@@ -540,12 +540,12 @@ public:
 			rc = sqlite3_step(stmt);
     	}
 		cout << "Podaj id rezerwacji, ktora chcesz usunac. " << endl;
-		cin >> data;
-		 rc = sqlite3_step(stmt);
+		cin >> usun;
+		rc = sqlite3_step(stmt);
     	if (rc == SQLITE_ROW) 
 		{
         	data = sqlite3_column_int(stmt, 0);
-        	string sql = "DELETE FROM Rezerwacje WHERE id_rezerwacji = " + data + ";"; // problem z typem zmiennej
+        	string sql = "DELETE FROM Rezerwacje WHERE id_rezerwacji = " + to_string(usun) + ";"; // problem z typem zmiennej
         	char* err_msg = nullptr;
        		rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg);
         	if(rc != SQLITE_OK) 
@@ -554,7 +554,7 @@ public:
             	sqlite3_free(err_msg);
         	}else 
 			{
-            	cout << "Rezerwacja " << data << " usunięta pomyslnie." << endl;
+            	cout << "Rezerwacja " << data << " usunięta pomyslnie." << endl << endl;
         	}
     	}else 
         	cout << "Rezerwacja o takim numerze nie istnieje." << endl << endl;
@@ -563,13 +563,76 @@ public:
     	return; 
 	}
 
-	/*zarejstruj_godziny_pracy(double poczatek_pracy, double koniec_pracy) 
+	void zarejstruj_godziny_pracy(double id_pracownika) 
 	{
-
-	}*/
+		sqlite3* db;
+		sqlite3_stmt* stmt;
+		string poczatek_pracy, koniec_pracy;
+		cout << endl << "\t---Rejestracja godzin pracy---" << endl;
+		cout << "Podaj godzine poczatku pracy (w formacie hh:mm): " << endl;
+		cin >> poczatek_pracy;
+		cout << "Podaj godzine konca pracy (w formacie hh:mm): " << endl;
+		cin >> koniec_pracy;
+		if(sqlite3_open("godziny_pracy.sqlite3", &db) != SQLITE_OK) 
+		{
+        	cerr << "Błąd przy otwieraniu bazy danych: " << sqlite3_errmsg(db) << endl;
+        	return;
+    	}
+		string sql = "INSERT INTO Rejestrowanie(id_pracownika, poczatek_pracy, koniec_pracy, dzien_tygodnia) "
+                      "VALUES (?, ?, ?, CASE strftime('%w', ?) "
+					  "WHEN '0' THEN 'Sobota' "
+                      "WHEN '1' THEN 'Niedziela' "
+                      "WHEN '2' THEN 'Poniedziałek' "
+                      "WHEN '3' THEN 'Wtorek' "
+                      "WHEN '4' THEN 'Środa' "
+                      "WHEN '5' THEN 'Czwartek' "
+                      "WHEN '6' THEN 'Piątek' "
+                      "END);";
+		if(sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) 
+		{
+        	cerr << "Błąd przygotowania zapytania: " << sqlite3_errmsg(db) << endl;
+			sqlite3_finalize(stmt);
+        	sqlite3_close(db);
+        	return;
+    	}
+		sqlite3_bind_int(stmt, 1, id_pracownika);
+    	sqlite3_bind_text(stmt, 2, poczatek_pracy.c_str(), -1, SQLITE_STATIC);
+    	sqlite3_bind_text(stmt, 3, koniec_pracy.c_str(), -1, SQLITE_STATIC);
+    	sqlite3_bind_text(stmt, 4, poczatek_pracy.c_str(), -1, SQLITE_STATIC);
+    	if(sqlite3_step(stmt) != SQLITE_DONE) 
+		{
+        	cerr << "Błąd wykonywania zapytania: " << sqlite3_errmsg(db) << endl;
+    	}else 
+		{
+        	cout << "Dane dodane pomyślnie!" << endl;
+    	}
+		sqlite3_finalize(stmt);
+		sql = "SELECT id_pracownika, poczatek_pracy, koniec_pracy, dzien_tygodnia "
+              "FROM Rejestrowanie;";
+    	if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
+    	{
+        	cerr << "Błąd przygotowania zapytania SELECT: " << sqlite3_errmsg(db) << endl;
+        	sqlite3_close(db);
+        	return;
+    	}
+		cout << "Tabela rejestracji godzin pracy: " << endl;
+		int kolumny = sqlite3_column_count(stmt); // Liczba kolumn w tabeli
+    	while (sqlite3_step(stmt) == SQLITE_ROW)
+    	{
+        	for (int i = 0; i < kolumny; i++)
+        	{
+            	const char* wartosc = reinterpret_cast<const char*>(sqlite3_column_text(stmt, i));
+            	cout << (wartosc ? wartosc : "NULL") << " | ";
+        	}
+        	cout << endl;
+    	}
+		sqlite3_finalize(stmt); // zwalnianie zasobow, zamykanie db
+    	sqlite3_close(db);
+		cout << endl << endl;
+	}
 };
-/*
-class Menadzer_hotelu : public Pracownik
+
+/*class Menadzer_hotelu : public Pracownik
 {
 	weryfikuj_rezerwacje(const int& id_rezerwacji, string status_rezerwacji) 
 	{
@@ -747,9 +810,11 @@ int main()
 	
 
 	string imie = "nie", nazwisko = "tak", stanowisko = "recepcjonista";
-	double id_pracownika = 1234;
+	double id_pracownika =123456;
 	Pracownik p(imie, nazwisko, stanowisko, id_pracownika);
 	p.aktualizuj_dostepnosc();
+	czekaj(1);
+	p.zarejstruj_godziny_pracy(id_pracownika);
 	czekaj(1);
 
 	return 0;
