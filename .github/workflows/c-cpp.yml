@@ -14,6 +14,7 @@ jobs:
     steps:
     - name: Testy jednostkowe
     - uses: actions/checkout@v4
+    
     - name: Konfiguracja i instalacja
       run: |
           sudo apt-get update
@@ -22,8 +23,29 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install -y cmake g++ ninja-build
+    - name: Konfiguracja CMake
+      run: |
+          cmake -S . -B build -G Ninja
+    - name: Budowa projektu
+      run: |
+          cmake --build build --config Release
     - name: Testowanie
       run: |
           cd build
           ctest --output-on-failure
+    - name: Statyczna analiza (cling-tidy)
+      run: |
+        sudo apt-get install -y clang-tidy
+        cmake -S . -B build Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        cland-tidy -p build $(find . -name "*.cpp")
+    - name: Genereowanie raportu pokrycia kodu
+      run: |
+        sudo apt-get install -y lcov
+        lcov --capture --directory build --output-file coverage.infop
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info
+        lcov --list coverage.info
+    - name: Generowanie raportu - HTML
+      run: |
+        genhtml -o raport_html pokrycie.info
+        echo "Raport wygenerowany - katalog raport_html"
   
