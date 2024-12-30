@@ -54,11 +54,13 @@ public:
     }
 
 	//
-	vector<string> zobacz_oferty_hoteli(const string& panstwo = "", int min_gwiazdek = 0) 
+	vector<string> zobacz_oferty_hoteli() 
 	{
 		vector<string> oferty;
 		string sql1;
-		int wybor;
+		int wybor, min_gwiazdek = 0;
+		char filtry;
+		string panstwo = "", miasto = "", opcja = "", i = "";
 		cout << endl << "\t---Wyswietlanie dostepnych hoteli---" << endl;
 		
 		if(!db)
@@ -67,14 +69,59 @@ public:
             return {}; // dla bledu zwrot pustego wektora
         }
 
-		czekaj(1);
         string sql = "SELECT nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo, adres FROM Hotele WHERE 1=1";
-        
-		if(!panstwo.empty())
-          	sql += " AND panstwo = '" + panstwo + "'";
-        if(min_gwiazdek > 0)
-            sql += " AND ilosc_gwiazdek >= " + to_string(min_gwiazdek);
-			
+		cout << "W celu wlaczenia filtrowania wpisz 1." << endl;
+		cin >> i;
+		czekaj(1);
+        if(i == "1")
+		{
+			cout << endl << "Filtrowanie ofert, wybierz jedna z nastepujacych opcji wpisujac przypisana jej cyfre: " << endl;
+			cout << "1. Miasto" << endl << "2. Panstwo" << endl << "3. Liczba gwiazdek" << endl << "Wybierz opcje: " << endl;
+			for(;;)
+			{	
+				cin>>opcja;
+				filtry=opcja[0];
+				if((filtry!='1' && filtry!='2' && filtry!='3') ||  !isdigit(filtry)) 
+				{
+					cout << "Wybrano nieistniejaca opcje." << endl;
+					break;
+				}
+            
+				switch(filtry)
+				{
+					case '1':
+						cout << "Podaj nazwe miasta: " << endl;
+						cin >> miasto;
+						break;
+					case '2':
+						cout << "Podaj nazwe panstwa: " << endl;
+						cin >> panstwo;
+						break;
+					case '3':
+						cout << "Podaj liczbe gwiazdek: " << endl;
+						cin >> min_gwiazdek;
+						break;
+					default:
+						break;	
+				};
+				cout << "Wybierz kolejna opcje: " << endl;
+			}	
+			if(!miasto.empty())
+			{
+				transform(miasto.begin(), miasto.end(), miasto.begin(), ::tolower);
+				miasto[0] = ::toupper(miasto[0]);
+          		sql += " AND miasto = '" + miasto + "'";
+			}
+			if(!panstwo.empty())
+			{
+				transform(panstwo.begin(), panstwo.end(), panstwo.begin(), ::tolower);
+				panstwo[0] = ::toupper(panstwo[0]);
+          		sql += " AND panstwo = '" + panstwo + "'";
+			}
+        	if(min_gwiazdek > 0)
+            	sql += " AND ilosc_gwiazdek >= " + to_string(min_gwiazdek) + ";";
+		}
+
 		// Funkcja callback do przetwarzania wyników
         auto callback = [](void* oferty, int argc, char** argv, char** azColName) -> int 
 		{
@@ -522,8 +569,6 @@ public:
 				kwota= 200;
 			}
 
-			// Uzywamy TODO: implementacji logiki czas_pobytu
-			//TODO:
 			//czas_pobytu = oblicz_czas_pobytu(poczatek_rezerwacji, koniec_rezerwacji);
 			//kwota = kwota * czas_pobytu;
 			cout << endl << "\t---Należna kwota za pobyt---" << endl;
@@ -544,7 +589,8 @@ public:
 };
 
 //
-/*class Administrator_systemu{
+/*class Administrator_systemu
+{
 	//double id_administratora;
 	void zarzadzaj_permisjami(const id_administratora, string login, string haslo, string permisje) { //dokonczyc koncowka
 		cout << "Podaj ID administratora: " << endl;
@@ -688,7 +734,7 @@ public:
         return t;
     }
 	
-	//
+	//zrobic konwersje dat do jednego ujednoliconego typu
 	void aktualizuj_dostepnosc() // ??? atrybuty  // dodawac numer pokoju?? moze baza danych z losowymi danymi pracownika
 	{
 		string data, usun = "";
@@ -794,9 +840,6 @@ public:
     	if(sqlite3_step(stmt) != SQLITE_DONE) 
 		{
         	cerr << "Błąd wykonywania zapytania: " << sqlite3_errmsg(db) << endl;
-    	}else 
-		{
-        	cout << "Dane dodane pomyślnie!" << endl;
     	}
 		sqlite3_finalize(stmt);
 		sql = "SELECT id_pracownika, poczatek_pracy, koniec_pracy, dzien_tygodnia "
@@ -807,7 +850,7 @@ public:
         	sqlite3_close(db);
         	return;
     	}
-		cout << "Tabela zarejstrowanych godzin pracy: " << endl;
+		cout << endl << "Tabela zarejstrowanych godzin pracy: " << endl;
 		int kolumny = sqlite3_column_count(stmt); // Liczba kolumn w tabeli
     	while (sqlite3_step(stmt) == SQLITE_ROW)
     	{
@@ -1134,7 +1177,7 @@ public:
 int main()
 {	//poprawic estetyke tych komentarzy
 	Gosc hotel("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3");
-    vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3); 
+    vector<string> wyniki = hotel.zobacz_oferty_hoteli(); 
     for(const string& wynik : wyniki)
         cout << wynik << endl;
 	czekaj(1);
@@ -1142,7 +1185,7 @@ int main()
 
 	// Klasa Hotel, Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
 	Hotel h("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3"); 
-	h.wyswietl_informacje_o_hotelu(); //zmienic na pobieranie danych z bazy
+	h.wyswietl_informacje_o_hotelu(); 
 	czekaj(1);
 	h.wyswietl_dostepne_pokoje();
 	czekaj(1);
@@ -1171,3 +1214,8 @@ int main()
 
 	return 1;
 }
+
+
+//zrobic: czas_pobytu i kwota, czas pracy logika i najlepiej minuty igarnac-->latwije wtedy,
+//data logika, przy wpisywaniu do tabel, i wszedzie, zmieniac "."  ma "-"
+//zmienic dane pracownika na losowe wszystko wlasciwie, pobierane z jakiejs bazy z kilkoma losowymi
