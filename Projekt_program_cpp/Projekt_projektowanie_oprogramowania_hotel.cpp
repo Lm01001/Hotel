@@ -23,13 +23,13 @@ void czekaj(int s)
     this_thread::sleep_for(chrono::seconds(s)); 
 }
 
-//  													//dorobic wybor i zapisanie hotelu
+//  													//[dorobic wybor i zapisanie hotelu - skonczone]//sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
 class Gosc
 {
 	string imie, email, nazwisko, dane;
 	double nr_tel, id_goscia;
 	sqlite3* db;
-public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
+public:       
 	//pseudolosowe generowanie id goscia. zakres 1-1000
 	Gosc() 
 	{ 
@@ -37,6 +37,7 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
         srand(time(0));
         id_goscia = rand() % 15000 + 1; //mamy te dane podawane w rezerwacji 
     }  
+
 	//
 	Gosc(const string& db_path)
 	{
@@ -47,38 +48,96 @@ public:       //sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
 			exit(1);
         }
     }
+
 	//
 	vector<string> zobacz_oferty_hoteli(const string& panstwo = "", int min_gwiazdek = 0) 
 	{
 		vector<string> oferty;
+		string sql1;
+		int wybor;
 		cout << endl << "\t---Wyswietlanie dostepnych hoteli---" << endl;
+		
 		if(!db)
 		{
             cerr << "Baza danych nie jest otwarta!" << endl;
-            return oferty;
+            return {}; // dla bledu zwrot pustego wektora
         }
-        string sql = "SELECT nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo FROM Hotele WHERE 1=1";
-        if(!panstwo.empty())
+
+		czekaj(1);
+        string sql = "SELECT nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo, adres FROM Hotele WHERE 1=1";
+        
+		if(!panstwo.empty())
           	sql += " AND panstwo = '" + panstwo + "'";
         if(min_gwiazdek > 0)
             sql += " AND ilosc_gwiazdek >= " + to_string(min_gwiazdek);
-        auto callback = [](void* oferty, int argc, char** argv, char** azColName) -> int // Funkcja callback do przetwarzania wyników
+			
+		// Funkcja callback do przetwarzania wyników
+        auto callback = [](void* oferty, int argc, char** argv, char** azColName) -> int 
 		{
             vector<string>* wyniki_vector = static_cast<vector<string>*>(oferty);
-            string wynik = "Hotel: " + string(argv[0]) + ", Gwiazdki: " + string(argv[1]) + ", Miasto: " + string(argv[2]) + ", Panstwo: " + string(argv[3]);
+            string wynik = "Hotel: " + string(argv[0]) + ", Gwiazdki: " + string(argv[1]) + ", Miasto: " + string(argv[2]) + ", Panstwo: " + string(argv[3]) + ", Adres: " + string(argv[4]);
             wyniki_vector->push_back(wynik);
-            return 0;
+			return 0;
         };
+
 		cout << endl;
        	char* error = nullptr;
         if(sqlite3_exec(db, sql.c_str(), callback, &oferty, &error)!=SQLITE_OK)
 		{
             cerr<<"Błąd podczas wykonywania zapytania: "<<error<< endl;
             sqlite3_free(error);
+			return {}; // dla bledu zwrot pustego wektora
         }
-		return oferty;
+
+		for(size_t i = 0; i < oferty.size(); ++i) 
+		{
+        	cout << i + 1 << ". " << oferty[i] << endl;
+    	}
+
+    	if(oferty.empty()) 
+		{
+        	cout << "Brak ofert spełniających kryteria." << endl;
+        	return {};
+    	}
+
+    	cout << "\n\tWybierz numer oferty, która Cie interesuje: ";
+    	Wybor:
+		cin >> wybor;
+    	if(wybor < 1 || wybor > oferty.size()) 
+		{
+    	    cerr << "Nieprawidłowy wybór." << endl;
+			cout << "Jesli chcesz wybrac ponownie, podaj 1 , a nastepnie podaj numer oferty."<< endl;
+			cin >> wybor;
+			if(wybor == 1)
+				goto Wybor;
+			else
+        		return {};
+		}
+
+		size_t start = oferty[wybor - 1].find(",") + 12;  
+		size_t koniec = oferty[wybor - 1].find(",", start); 
+		size_t ostatnia_kol = oferty[wybor - 1].rfind(',') + 7;
+		string nazwa_hotelu = oferty[wybor - 1].substr(7, oferty[wybor - 1].find(",") - 7);
+		string adres = oferty[wybor - 1].substr(ostatnia_kol + 1);       
+		string ilosc_gwiazdek = oferty[wybor - 1].substr(start, koniec - start);
+		
+		
+		
+		sql1 = "INSERT INTO Informacje_hotel (nazwa_hotelu, standard_pokoju, cena_doba, adres, liczba_gwiazdek) VALUES ('" + nazwa_hotelu + "' , NULL ,  NULL,'" + adres + "', '" + ilosc_gwiazdek + "');";
+
+    	if(sqlite3_exec(db, sql1.c_str(), nullptr, nullptr, &error) != SQLITE_OK) 
+		{
+        	cerr << "Błąd podczas dodawania oferty: " << error << endl << endl;
+        	sqlite3_free(error);
+			return {};
+    	}
+		else{
+        	cout << "Oferta zostala pomyslnie zapisana." << endl << endl;
+		}
+		return {};
 	}
-	//destruktor, zamkniecie bazy danych
+
+	// Destruktor, zamkniecie bazy danych
 	~Gosc() 
 	{ 
         if(db) 
@@ -124,6 +183,7 @@ public:
         return t;
     }
 
+	//
 	void utworz_rezerwacje()
 	{   
 		string standard_pokoju, imie_goscia, nazwisko_goscia;
@@ -182,18 +242,19 @@ public:
 			<< "Koniec" << endl;
 			cout << string(110, '-') << endl;
 			cout << dane;
-			string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji, pomoc) VALUES (" + to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "', CURRENT_TIMESTAMP);";
+			string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji, pomoc) VALUES ("+ to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "', CURRENT_TIMESTAMP);";
     	char* err_msg = nullptr;
-    	if(sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg) != SQLITE_OK){
-        cerr << endl << endl << "\tBłąd podczas zapisu rezerwacji do bazy danych: " << err_msg << endl;
-        sqlite3_free(err_msg);
+    	if(sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg) != SQLITE_OK)
+		{
+        	cerr << endl << endl << "\tBlad podczas zapisu rezerwacji do bazy danych: " << err_msg << endl;
+        	sqlite3_free(err_msg);
     	}
 		string fetch_ostatni= "SELECT * FROM Rezerwacje ORDER BY id_rezerwacji DESC LIMIT 1;";
 		sqlite3_stmt* stmt;
 		int rc = sqlite3_prepare_v2(db, fetch_ostatni.c_str(), -1, &stmt, 0);
         if (rc != SQLITE_OK) 
         {
-            cerr << "Error while preparing SQL query: " << sqlite3_errmsg(db) << endl;
+            cerr << "Problem z przygotowywaniem sql query: " << sqlite3_errmsg(db) << endl;
             sqlite3_finalize(stmt);
             sqlite3_close(db);
             return;
@@ -344,6 +405,7 @@ class Rachunek
 	string data_wystawienia, data_platnosci;
 	int id_rezerwacji;
 public:
+	//
 	int utworz_rachunek(double& kwota) 
 	{
     	sqlite3* db;
@@ -380,6 +442,7 @@ public:
     	return 1;    
 	}
 
+	//
 	int zaplac(int czas_pobytu, double& kwota)    // mozna dodac opcje rozne ceny za rozne standardy
 	{  
 		cout << endl << "\t---Należna kwota za pobyt---" << endl;
@@ -439,23 +502,35 @@ public:
 	}
 };*/
 
-//
-/*class I_menadzer_rezerwacji 
+
+//    													//powinno byc wstepnie ok, sprawdzic w praktyce
+class I_menadzer_rezerwacji 
 {
 public:
+	//metody wirtualne, (=0) deklaracja metody jako czysto wirtualnej zapewnienie polimorfizmu;
+	//mozliwe odwolywanie sie do nich - faktyczna implementacja przez klase pochodna
 	virtual void stworz_rezerwacje(int id_goscia, Rezerwacja rezerwacja) = 0;
 	virtual void anuluj_rezerwacje(int id_rezerwacji) = 0;
 	virtual void aktualizuj_rezerwacje(int id_rezerwacji, Rezerwacja nowa_rezerwacja) = 0;
 	virtual vector<Rezerwacja> wyswietl_rezerwacje(int id_goscia) = 0;
-	virtual ~I_menadzer_rezerwacji() = default;  //wirtualny destruktor
+	
+	//wirtualny destruktor
+	virtual ~I_menadzer_rezerwacji() = default;  
 };
-class Menadzer_rezerwacji : public I_menadzer_rezerwacji {	  //klucz: id_goscia, hash-table na wartosci klucz-gosc
-	unordered_map<int, vector<Rezerwacja>> rezerwacje-mapa;  //z biblioteki <unordered_map> funckja dzialajaca jak powyzej
+
+
+//														//powinno byc wstepnie ok, sprawdzic w praktyce
+/*class Menadzer_rezerwacji : public I_menadzer_rezerwacji 
+{
+	//klucz: id_goscia, hash-table na wartosci klucz-gosc; z biblioteki <unordered_map>
+	//funckja dzialajaca jak powyzej
+	unordered_map<int, vector<Rezerwacja>> rezerwacje_mapa;  
 public:
-	void zrob_rezerwacje(int id_goscia, Rezerwacja rezerwacja) override {} //do nadpisywania i wychwytywania bledow dot klasy bazowej    !!!!!!!
+	//do nadpisywania i wychwytywania bledow dot. klasy bazowej 
+	void stworz_rezerwacje(int id_goscia, Rezerwacja rezerwacja) override {} 
 	void anuluj_rezerwacje(int id_rezerwacji) override {}
 	void aktualizuj_rezerwacje(int id_rezerwacji, Rezerwacja nowa_rezerwacja) override {}
-	vector<Rezerwacja> wyswietlRezerwacje(int id_goscia) override {}
+	vector<Rezerwacja> wyswietl_rezerwacje(int id_goscia) override {}
 };*/
 
 //
@@ -497,6 +572,7 @@ public:
         id_pracownika = rand() % 5000 + 1; 
     } 
 
+	//
 	bool poprawna_data(const string& data)
 	{
     	if(data.size() != 10) return false;
@@ -512,6 +588,7 @@ public:
     	return true;
 	}
 
+	//
 	tm string_do_tm(const string& data)
     {
         tm t = {};
@@ -520,6 +597,7 @@ public:
         return t;
     }
 	
+	//
 	void aktualizuj_dostepnosc() // ??? atrybuty  // dodawac numer pokoju?? moze baza danych z losowymi danymi pracownika
 	{
 		string data;
@@ -586,6 +664,7 @@ public:
     	return; 
 	}
 
+	//
 	void zarejstruj_godziny_pracy(double id_pracownika) //!!!!!zmienic id_pracownika i nie dawac jako argument
 	{
 		sqlite3* db;
@@ -731,26 +810,62 @@ protected:
 	}
 };*/
 
-//
-class Hotel //klasa wstepnie skonczona - dziala
+//														//klasa wstepnie skonczona - dziala
+class Hotel 
 { 
+	sqlite3* db;
 public:
 	const static string nazwa, adres;
 	const static float l_gwiazdek;
 	int liczba_pokoi[3];
-	int wyswietl_informacje_o_hotelu(const float& l_gwiazdek, const string& nazwa, const string& adres) // metoda dziala
-	{  
 
-		cout << "\n\t---Wyswietlanie informacji o hotelu---" << endl;
-		cout << "Nazwa: " << nazwa << endl;
-		cout << "Adres: " << adres << endl;
-		cout << "Liczba gwiazdek: ";
-		for(int i = 0; i < l_gwiazdek; i++)
-			cout << "*";
-		cout << endl << endl << endl;
+	// Konstruktor domyslny
+	Hotel() : db(nullptr)
+	{
+		// Do inicjalizacji gen. liczb pseudolosowych
+		srand(time(NULL)); 
+	}
+
+	// Otwieranie bazy danych
+	Hotel(const string& db_path)
+	{
+        if(sqlite3_open(db_path.c_str(), &db))
+		{
+            cerr << "Nie można otworzyć bazy danych: " << sqlite3_errmsg(db) << endl;
+            db = nullptr;
+			exit(1);
+        }
+    }
+
+	//
+	int wyswietl_informacje_o_hotelu() // metoda dziala
+	{  
+    	string sql = "SELECT nazwa_hotelu, adres, liczba_gwiazdek FROM Informacje_hotel ORDER BY ROWID DESC LIMIT 1;"; 
+    	sqlite3_stmt* stmt;
+		if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) 
+    	{
+     		cerr << "Nie można przygotować zapytania: " << sqlite3_errmsg(db) << endl;
+        	return -1;
+    	}
+
+		if(sqlite3_step(stmt) == SQLITE_ROW)
+		{
+			const char* nazwa_hotelu = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+        	const char* adres = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+			const char* liczba_gwiazdek = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+			cout << "\n\t---Wyswietlanie informacji o hotelu---" << endl;
+			cout << "Nazwa: " << nazwa_hotelu << endl;
+			cout << "Adres: " << adres << endl;
+			cout << "Liczba gwiazdek: " << liczba_gwiazdek << endl << endl;
+		}
+		else{
+			cerr << "Nie znaleziono danych w tabeli." << endl;
+		}
+		sqlite3_finalize(stmt);
 		return 0;
 	}
 	
+	//
 	int wyswietl_dostepne_pokoje() 
 	{
 	    string i;
@@ -759,7 +874,7 @@ public:
 		{
             liczba_pokoi[i] = rand() % 123 + 1;
         }
-		cout << "\t---wyswietlanie dostepnych pokoi---" << endl;
+		cout << endl << "\t---wyswietlanie dostepnych pokoi---" << endl;
 	    cout << "Podaj standard pokoju, gdzie standard(0), studio(1) i premium(2): " << endl;
 	    cin >> i;
 		int standard = -1;
@@ -809,24 +924,30 @@ public:
 	            return 0;
 		};
 	}
+
+	// Destruktor, zamkniecie bazy danych
+	~Hotel() 
+	{ 
+        if(db) 
+        	sqlite3_close(db);
+    }
 };
 
 int main()
 {	//poprawic estetyke tych komentarzy
-	// Klasa Hotel, Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
-	Hotel h; 
-	h.wyswietl_informacje_o_hotelu(4, "Hotel na potrzeby projektu", "ul. Konieczna 4");
-	czekaj(1);
-	h.wyswietl_dostepne_pokoje();
-	czekaj(1);
-
-
 	Gosc hotel("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3");
-    vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3);  // filtr dotyczacy gwiazdek naprawic
+    vector<string> wyniki = hotel.zobacz_oferty_hoteli("Polska", 3); 
     for(const string& wynik : wyniki)
         cout << wynik << endl;
 	czekaj(1);
 
+
+	// Klasa Hotel, Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
+	Hotel h("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3"); 
+	h.wyswietl_informacje_o_hotelu(); //zmienic na pobieranie danych z bazy
+	czekaj(2);
+	h.wyswietl_dostepne_pokoje();
+	czekaj(1);
 
 	Rezerwacja rez;
 	rez.utworz_rezerwacje(); //e.h.  poprawnosc daty ograniczenia etc
