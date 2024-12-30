@@ -519,7 +519,7 @@ public:
 };
 
 
-//														//powinno byc wstepnie ok, sprawdzic w praktyce
+//														//powinno byc wstepnie ok, sprawdzic w praktyce ?????
 /*class Menadzer_rezerwacji : public I_menadzer_rezerwacji 
 {
 	//klucz: id_goscia, hash-table na wartosci klucz-gosc; z biblioteki <unordered_map>
@@ -868,61 +868,159 @@ public:
 	//
 	int wyswietl_dostepne_pokoje() 
 	{
+		if(!db)
+		{
+            cerr << "Baza danych nie jest otwarta!" << endl;
+            return 0;
+        }
+		
 	    string i;
+		int cena_doba = 0;
+		const char* standard_pokoju = nullptr;
+		string sql = "SELECT standard_pokoju, cena_doba FROM Informacje_hotel;"; //ORDER BY ROWID DESC LIMIT 1
+		sqlite3_stmt* stmt;
+		if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) 
+    	{
+     		cerr << "Nie można przygotować zapytania: " << sqlite3_errmsg(db) << endl;
+        	return -1;
+    	}
+
 		srand(time(NULL));
+		// Petla przypisuje pseudolosowe liczby do kazdego ze standardow pokoju
 		for(int i = 0; i < 3; ++i) 
 		{
             liczba_pokoi[i] = rand() % 123 + 1;
         }
-		cout << endl << "\t---wyswietlanie dostepnych pokoi---" << endl;
-	    cout << "Podaj standard pokoju, gdzie standard(0), studio(1) i premium(2): " << endl;
-	    cin >> i;
-		int standard = -1;
-		if(i == "0" || i == "standard")
-   	 	{
-        	standard = 0;  // Standard
-   	 	}else if(i == "1" || i == "studio")
-    	{
-        	standard = 1;  // Studio
-    	}else if(i == "2" || i == "premium")
-    	{
-        	standard = 2;  // Premium
-    	}else 
-   	 	{
-        	cout << "Tworzenie rezerwacji zakończone niepowodzeniem!" << endl;
-        	return 0;
-    	}
 
-		switch(standard)
+		if(sqlite3_step(stmt) == SQLITE_ROW)
 		{
-			case 0:
-				if(liczba_pokoi[0]==0)
-				{
-					cout << "Brak dostepnych pokoi w tym standardzie! " << endl << endl;
+			standard_pokoju = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+			cena_doba = sqlite3_column_int(stmt, 1);
+		}
+		sqlite3_finalize(stmt);
+
+		cout << endl << "\t---Wyswietlanie dostepnych pokoi---" << endl;
+	    cout << "Podaj standard pokoju, gdzie standard(0), studio(1) i premium(2): " << endl; 
+		for(;;)
+		{	
+			cin >> i;
+			int standard = -1;
+			cena_doba = 0;
+			if(i == "0" || i == "standard"){
+        		standard = 0;  // Standard - wybrany standard pokoju
+				cena_doba = 120;
+			}
+			else if(i == "1" || i == "studio"){
+        		standard = 1;  // Studio - wybrany standard pokoju
+				cena_doba = 155;
+			}
+			else if(i == "2" || i == "premium"){
+        		standard = 2;  // Premium - wybrany standard pokoju
+				cena_doba = 200;
+			}
+
+			if(liczba_pokoi[0] == 0 && liczba_pokoi[1] == 0 && liczba_pokoi[2] == 0)
+			{
+				cout << "Niestety, brak jakichkolwiek wolnych pokoi w hotelu. Sprobuj ponownie wybierajac inny hotel.";
+				exit(0);
+			}
+
+			string nazwa_standard = "";
+			string insert = "INSERT INTO Informacje_hotel (standard_pokoju, cena_doba) VALUES (?, ?);";
+    		sqlite3_stmt* stmt2;
+			
+
+			switch(standard)
+			{
+				case 0:
+					if(liczba_pokoi[0]==0)
+					{
+						cout << "Brak dostepnych pokoi w tym standardzie! " << endl;
+						cout << "Wybierz inna opcje." << endl;
+						continue;
+					}
+					cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi[0] << endl << endl;
+					nazwa_standard = "standard";
+					break;
+				case 1:
+					if(liczba_pokoi[1]==0)
+					{
+						cout << "Brak dostepnych pokoi w tym standardzie! " << endl << endl;
+						cout << "Wybierz inna opcje." << endl;
+						continue;
+					}
+					cout << "Liczba dostepnych pokoi 'studio': " << liczba_pokoi[1] << endl << endl;
+					nazwa_standard = "studio";
+					break;
+				case 2:
+					if(liczba_pokoi[2]==0)
+					{
+						cout << "Brak dostepnych pokoi w tym standardzie! " << endl;
+						cout << "Wybierz inna opcje." << endl;
+						continue;
+					}
+					cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi[2] << endl << endl;
+					nazwa_standard = "premium";
+					break;
+				default:
+					cout << "Podano niepoprawną wartość!" << endl << endl;
+	            	sqlite3_finalize(stmt2);
 					return 0;
-				}
-				cout << "Liczba dostepnych pokoi 'standard': " << liczba_pokoi[0] << endl << endl;
-				return 0;
-			case 1:
-				if(liczba_pokoi[1]==0)
-				{
-					cout << "Brak dostepnych pokoi w tym standardzie! " << endl << endl;
-					return 0;
-				}
-				cout << "Liczba dostepnych pokoi 'studio': " << liczba_pokoi[1] << endl << endl;
-				return 0;
-			case 2:
-				if(liczba_pokoi[2]==0)
-				{
-					cout << "Brak dostepnych pokoi w tym standardzie! " << endl;
-					return 0;
-				}
-				cout << "Liczba dostepnych pokoi 'premium': " << liczba_pokoi[2] << endl << endl;
-				return 0;
-			default:
-				cout << "Podano niepoprawną wartość!" << endl << endl;
-	            return 0;
-		};
+			}
+
+			if(sqlite3_prepare_v2(db, insert.c_str(), -1, &stmt2, nullptr) != SQLITE_OK) 
+        	{
+            	cerr << "Nie można przygotować zapytania: " << sqlite3_errmsg(db) << endl;
+            	return -1;
+        	}
+        sqlite3_bind_text(stmt2, 1, nazwa_standard.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt2, 2, cena_doba);
+			if(sqlite3_step(stmt2) != SQLITE_DONE)
+        	{
+            	cerr << "Błąd przy wykonywaniu zapytania: " << sqlite3_errmsg(db) << endl;
+            	sqlite3_finalize(stmt2);
+            	return -1;
+        	}
+        sqlite3_finalize(stmt2);
+
+		int id_ostatni_wiersz = sqlite3_last_insert_rowid(db) - 1;
+		string aktualizacja =  "UPDATE Informacje_hotel SET standard_pokoju = ?, cena_doba = ? WHERE ROWID = " + to_string(id_ostatni_wiersz) + ";";
+    	sqlite3_stmt* stmt_akt;
+			if(sqlite3_prepare_v2(db, aktualizacja.c_str(), -1, &stmt_akt, nullptr) != SQLITE_OK) 
+        	{
+            	cerr << "Nie można przygotować zapytania: " << sqlite3_errmsg(db) << endl;
+            	return -1;
+        	}
+		sqlite3_bind_text(stmt_akt, 1, nazwa_standard.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt_akt, 2, cena_doba);
+			if(sqlite3_step(stmt_akt) != SQLITE_DONE)
+        	{
+            	cerr << "Błąd przy wykonywaniu zapytania: " << sqlite3_errmsg(db) << endl;
+            	sqlite3_finalize(stmt_akt);
+            	return -1;
+        	}	
+		sqlite3_finalize(stmt_akt);	
+
+		id_ostatni_wiersz += 1;
+		string usuwanie =  "DELETE FROM Informacje_hotel WHERE ROWID = " + to_string(id_ostatni_wiersz) + ";";
+    	sqlite3_stmt* stmt_usuwanie;
+		if(sqlite3_prepare_v2(db, usuwanie.c_str(), -1, &stmt_usuwanie, nullptr) != SQLITE_OK) 
+        	{
+            	cerr << "Nie można przygotować zapytania: " << sqlite3_errmsg(db) << endl;
+            	return -1;
+        	}
+		sqlite3_bind_text(stmt_akt, 1, nazwa_standard.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt_akt, 2, cena_doba);
+			if(sqlite3_step(stmt_usuwanie) != SQLITE_DONE)
+        	{
+            	cerr << "Błąd przy wykonywaniu zapytania: " << sqlite3_errmsg(db) << endl;
+            	sqlite3_finalize(stmt_usuwanie);
+            	return -1;
+        	}	
+		sqlite3_finalize(stmt_usuwanie);
+
+        return 0;
+		}
 	}
 
 	// Destruktor, zamkniecie bazy danych
@@ -936,7 +1034,7 @@ public:
 int main()
 {	//poprawic estetyke tych komentarzy
 	Gosc hotel("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3");
-    vector<string> wyniki = hotel.zobacz_oferty_hoteli("Polska", 3); 
+    vector<string> wyniki = hotel.zobacz_oferty_hoteli("", 3); 
     for(const string& wynik : wyniki)
         cout << wynik << endl;
 	czekaj(1);
