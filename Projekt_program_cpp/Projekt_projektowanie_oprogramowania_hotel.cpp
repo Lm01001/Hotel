@@ -14,14 +14,18 @@
 #include "sqlite3.h"
 #include <chrono>
 #include <thread>
+#include <cstring>
 
-using namespace std; // kompilacja github/vscode:  g++ -std=c++11 -o hotel_program Projekt_projektowanie_oprogramowania_hotel.cpp -lsqlite3
+using namespace std; // kompilacja github/vscode(wsl):  g++ -std=c++11 -o hotel_program Projekt_projektowanie_oprogramowania_hotel.cpp -lsqlite3
+//stworzyc nowy terminal przed pokazaniem kodu!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 // Wstrzymanie na programu na podana ilosc sekund  		//ok 
 void czekaj(int s) 
 {
     this_thread::sleep_for(chrono::seconds(s)); 
 }
+
 
 //  													//[dorobic wybor i zapisanie hotelu - skonczone]//sprawdzic czy generowanie id dla goscia potrzebne !!!!!!!!!!!
 class Gosc
@@ -149,7 +153,8 @@ public:
 class Rezerwacja
 {
 	string poczatek_rezerwacji, koniec_rezerwacji, dane;
-	double id_rezerwacji;
+	int id_rezerwacji;
+
 public:
 	// 
 	bool poprawna_data(const string& data)
@@ -175,15 +180,6 @@ public:
     }
 
 	//
-	tm string_do_tm(const string& data)
-    {
-        tm t = {};
-        istringstream ss(data);
-        ss >> get_time(&t, "%d-%m-%Y");
-        return t;
-    }
-
-	//
 	void utworz_rezerwacje()
 	{   
 		string standard_pokoju, imie_goscia, nazwisko_goscia;
@@ -197,8 +193,24 @@ public:
 		cout << endl << "\t---Tworzenie rezerwacji---" << endl;
 		cout << "Podaj imie: "; cin>>imie_goscia;
 		cout << "Podaj nazwisko: "; cin>>nazwisko_goscia;
-		
-		for(;;){
+
+
+		const char* sql2 = "SELECT standard_pokoju FROM Informacje_hotel";
+		sqlite3_stmt* stmt2;
+		if(sqlite3_prepare_v2(db, sql2, -1, &stmt2, 0) != SQLITE_OK) 
+		{
+        	cerr << "Nie udało się przygotować zapytania: " << sqlite3_errmsg(db) << endl;
+        	return;
+    	}
+		if(sqlite3_step(stmt2) == SQLITE_ROW) 
+		{
+        	const char *standard = reinterpret_cast<const char *>(sqlite3_column_text(stmt2, 0));
+			standard_pokoju = string(standard);
+		}else 
+        	cerr << "Blad przy pobieraniu danych." << endl;
+		sqlite3_finalize(stmt2);
+
+		/*for(;;){
 			cout << "Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; cin>>standard_pokoju;
 			transform(standard_pokoju.begin(), standard_pokoju.end(), standard_pokoju.begin(), ::tolower);
 			if(standard_pokoju == "standard" || standard_pokoju == "studio" || standard_pokoju == "premium")
@@ -212,7 +224,8 @@ public:
 				continue;
 			else
 				exit(1);
-		}
+		}*/
+		
 		for(;;) 
 		{
         	cout << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
@@ -232,6 +245,7 @@ public:
             	break;
         }
 		cout << "Rezerwacja utworzona pomyslnie!" << endl;
+
 		ostringstream oss;
         	oss << left << setw(20) << id_rezerwacji << setw(15) << (imie_goscia.size() > 18 ? imie_goscia.substr(0, 17) + "." : imie_goscia)
         	<< setw(20) << (nazwisko_goscia.size() > 18 ? nazwisko_goscia.substr(0, 17) + "." : nazwisko_goscia) << setw(20) << standard_pokoju
@@ -242,7 +256,8 @@ public:
 			<< "Koniec" << endl;
 			cout << string(110, '-') << endl;
 			cout << dane;
-			string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji, pomoc) VALUES ("+ to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "', CURRENT_TIMESTAMP);";
+
+		string sql = "INSERT INTO Rezerwacje (id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, poczatek_rezerwacji, koniec_rezerwacji, pomoc) VALUES ("+ to_string(id_rezerwacji) + ", '" + imie_goscia + "', '" + nazwisko_goscia + "', '" + standard_pokoju + "', '" + poczatek_rezerwacji + "', '" + koniec_rezerwacji + "', CURRENT_TIMESTAMP);";
     	char* err_msg = nullptr;
     	if(sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg) != SQLITE_OK)
 		{
@@ -259,9 +274,7 @@ public:
             sqlite3_close(db);
             return;
         }
-        
-        rc = sqlite3_step(stmt);
-        if (rc == SQLITE_ROW) 
+        if (sqlite3_step(stmt) == SQLITE_ROW) 
         {
             int id = sqlite3_column_int(stmt, 0);
             const char* imie = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
@@ -269,25 +282,14 @@ public:
             const char* standard = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
             const char* poczatek = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
             const char* koniec = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5));
-        } 
+        }else 
+        	cerr << "Blad przy pobieraniu danych." << endl;
 		sqlite3_finalize(stmt);
     	sqlite3_close(db);
 	}
 
 	// Destruktor
 	~Rezerwacja() {} 
-
-	// Obliczanie czasu pobytu na bazie podanych dat poczatka i konca
-	int oblicz_czas_pobytu()
-    {
-        tm poczatek = string_do_tm(poczatek_rezerwacji);
-        tm koniec = string_do_tm(koniec_rezerwacji);
-        time_t t_poczatek = mktime(&poczatek); // Konwersja na czas unixowy - od 1970-01-01
-        time_t t_koniec = mktime(&koniec);
-        double roznica = difftime(t_koniec, t_poczatek); // Roznica w sekundach
-        int dni_pobytu = roznica / (60 * 60 * 24);  // Zamiana sekund na dni
-        return dni_pobytu;
-    }
 
 	//
 	/*void usun_rezerwacje() // exception handling potrzebny, by nie usunac wiecej niz tylko swojej rezerwacji
@@ -401,13 +403,39 @@ public:
 // 														// ok
 class Rachunek
 {
+	int czas_pobytu;
 	double kwota;
 	string data_wystawienia, data_platnosci;
 	int id_rezerwacji;
 public:
 	//
-	int utworz_rachunek(double& kwota) 
+	tm string_to_tm(const string& data)
 	{
+    	tm t = {};
+    	istringstream ss(data);
+    	ss >> get_time(&t, "%d-%m-%Y");
+    	return t;
+	}	
+
+	// Obliczanie czasu pobytu na bazie podanych dat poczatka i konca
+	int oblicz_czas_pobytu(const string& poczatek_tm, const string& koniec_tm)   
+	{
+	    tm poczatek = string_to_tm(poczatek_tm);
+		tm koniec = string_to_tm(koniec_tm);
+	    time_t t_poczatek = mktime(&poczatek); // Konwersja na czas unixowy - od 1970-01-01
+	    time_t t_koniec = mktime(&koniec);
+	    double roznica = difftime(t_koniec, t_poczatek); // Roznica w sekundach
+	    int dni_pobytu = roznica / (60 * 60 * 24);  // Zamiana sekund na dni
+	    return dni_pobytu;
+	}
+
+	//
+	int utworz_rachunek() 
+	{
+		double kwota_dbl = 0.0;
+		double& kwota = kwota_dbl;
+		int pobyt = 0;
+		int& czas_pobytu = pobyt;
     	sqlite3* db;
 		sqlite3_stmt *stmt;
     	if (sqlite3_open("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3", &db) != SQLITE_OK) 
@@ -415,40 +443,112 @@ public:
         	cerr << "Niepowodzenie przy pobieraniu danych: " << sqlite3_errmsg(db) << endl;
         	return 0;
     	}
-    	const char *sql = "SELECT id_rezerwacji, poczatek_rezerwacji, koniec_rezerwacji FROM Rezerwacje ORDER BY pomoc DESC LIMIT 1;"; //ASC LIMIT 1 OFFSET 1   ORDER BY id_rezerwacji DESC LIMIT 1
-    	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
-    	if(rc != SQLITE_OK) 
+    	const char *sql = "SELECT id_rezerwacji, poczatek_rezerwacji, koniec_rezerwacji, standard_pokoju FROM Rezerwacje ORDER BY pomoc DESC LIMIT 1;"; 
+    	if(sqlite3_prepare_v2(db, sql, -1, &stmt, 0) != SQLITE_OK) 
 		{
         	cerr << "Nie udało się przygotować zapytania: " << sqlite3_errmsg(db) << endl;
         	return 0;
     	}
-    	rc = sqlite3_step(stmt);
-    	if(rc == SQLITE_ROW) 
+
+    	if(sqlite3_step(stmt) == SQLITE_ROW) 
 		{
         	int ost = sqlite3_column_int(stmt, 0);  // zapis ostatniego id; indeks 0 dla pierwszej kolumny
         	const char *poczatek_rezerwacji = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
         	const char *koniec_rezerwacji = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2)); 
-        	string poczatek_rez(poczatek_rezerwacji);
-        	string koniec_rez(koniec_rezerwacji);
+			const char *standard_pokoju = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
+			if(strcmp(standard_pokoju, "standard"))
+			{
+				kwota = 120;
+			}
+			else if(strcmp(standard_pokoju, "studio")){
+				kwota = 155;
+			}
+			else if(strcmp(standard_pokoju, "premium")){
+				kwota= 200;
+			}
+        	string poczatek_rezerwacji_st(poczatek_rezerwacji);
+        	string koniec_rezerwacji_st(koniec_rezerwacji);
+			if(strcmp(standard_pokoju, "standard") == 0)
+			{
+				kwota = 120;
+			}
+			else if(strcmp(standard_pokoju, "studio") == 0){
+				kwota = 155;
+			}
+			else if(strcmp(standard_pokoju, "premium") == 0){
+				kwota= 200;
+			}
+			czas_pobytu = oblicz_czas_pobytu(poczatek_rezerwacji, koniec_rezerwacji);
+			kwota = kwota * czas_pobytu;
         	cout << endl << "\t---Tworzenie rachunku---" << endl;
         	cout << "Rachunek klienta: "<< endl;
-        	cout << "  ID rezerwacji: " << ost << endl << "  Data wystawienia: " << poczatek_rez << endl;
-			cout << "  Data platnosci: " << koniec_rez << endl;
+        	cout << "  ID rezerwacji: " << ost << endl << "  Data wystawienia: " << poczatek_rezerwacji_st << endl;
+			cout << "  Data platnosci: " << koniec_rezerwacji_st << endl;
 			cout << "  Kwota do zaplaty: " << kwota << endl << endl;
     	}else 
         	cerr << "Blad przy pobieraniu danych." << endl;
     	sqlite3_finalize(stmt); // zwalnianie zasobow, zamykanie bazy danych
     	sqlite3_close(db);
-    	return 1;    
+    	return 0;  
 	}
 
 	//
-	int zaplac(int czas_pobytu, double& kwota)    // mozna dodac opcje rozne ceny za rozne standardy
+	int zaplac()    // mozna dodac opcje rozne ceny za rozne standardy
 	{  
-		cout << endl << "\t---Należna kwota za pobyt---" << endl;
-		cout << "Dlugosc pobytu: " << czas_pobytu << " dni" << endl;
-		cout << "Kwota do zaplaty: " << kwota << endl << endl;
-		return 1;
+		int pobyt = 0;
+		int& czas_pobytu = pobyt;
+		double kwota_dbl = 0.0;
+		double& kwota = kwota_dbl;
+		string sql;
+		sqlite3* db;
+		sqlite3_stmt* stmt;
+    	if(sqlite3_open("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3", &db) != SQLITE_OK) 	
+		{
+        	cerr << "Nie można otworzyć bazy danych: " << sqlite3_errmsg(db) << endl;
+        	return 0;
+    	}
+
+		sql = "SELECT nazwa_hotelu, liczba_gwiazdek, adres, standard_pokoju FROM Informacje_hotel";
+    	if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) 
+    	{
+     		cerr << "Nie można przygotować zapytania: " << sqlite3_errmsg(db) << endl;
+        	return -1;
+    	}
+
+		if(sqlite3_step(stmt) == SQLITE_ROW)
+		{
+			const char* nazwa_hotelu = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+			int liczba_gwiazdek = (sqlite3_column_int(stmt, 1));
+        	const char* adres = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+			const char* standard_pokoju = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+	
+			if(strcmp(standard_pokoju, "standard") == 0)
+			{
+				kwota = 120;
+			}
+			else if(strcmp(standard_pokoju, "studio") == 0){
+				kwota = 155;
+			}
+			else if(strcmp(standard_pokoju, "premium") == 0){
+				kwota= 200;
+			}
+
+			//czas_pobytu = oblicz_czas_pobytu(poczatek_rezerwacji, koniec_rezerwacji);
+			kwota = kwota * czas_pobytu;
+			cout << endl << "\t---Należna kwota za pobyt---" << endl;
+			cout << "Hotel: " << nazwa_hotelu << " " << liczba_gwiazdek << endl;			
+			cout << "Adres: " << adres << endl;
+			cout << "Dlugosc pobytu: " << czas_pobytu << " dni" << endl;
+			cout << "Standard pokoju: " << standard_pokoju << endl << endl;
+			cout << "Kwota do zaplaty: " << kwota << endl << endl;
+		}
+		else{
+			cerr << "Nie znaleziono danych w tabeli." << endl;
+		}
+
+		sqlite3_finalize(stmt); // zwalnianie zasobow, zamykanie db
+    	sqlite3_close(db);
+		return 0;
 	}
 };
 
@@ -877,7 +977,7 @@ public:
 	    string i;
 		int cena_doba = 0;
 		const char* standard_pokoju = nullptr;
-		string sql = "SELECT standard_pokoju, cena_doba FROM Informacje_hotel;"; //ORDER BY ROWID DESC LIMIT 1
+		string sql = "SELECT standard_pokoju, cena_doba FROM Informacje_hotel;"; 
 		sqlite3_stmt* stmt;
 		if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) 
     	{
@@ -900,7 +1000,8 @@ public:
 		sqlite3_finalize(stmt);
 
 		cout << endl << "\t---Wyswietlanie dostepnych pokoi---" << endl;
-	    cout << "Podaj standard pokoju, gdzie standard(0), studio(1) i premium(2): " << endl; 
+	    cout << "Sprawdzenie dostepnosci jest rownoznaczne z wyborem standardu chyba, ze nie ma dostepnych pokoi."
+			 << endl <<"Podaj standard pokoju, gdzie standard(0), studio(1) i premium(2): " << endl; 
 		for(;;)
 		{	
 			cin >> i;
@@ -921,15 +1022,12 @@ public:
 
 			if(liczba_pokoi[0] == 0 && liczba_pokoi[1] == 0 && liczba_pokoi[2] == 0)
 			{
-				cout << "Niestety, brak jakichkolwiek wolnych pokoi w hotelu. Sprobuj ponownie wybierajac inny hotel.";
+				cout << "Niestety, brak jakichkolwiek wolnych pokoi w hotelu. " << endl 
+					 << "Sprobuj ponownie wybierajac inny hotel.";
 				exit(0);
 			}
 
 			string nazwa_standard = "";
-			string insert = "INSERT INTO Informacje_hotel (standard_pokoju, cena_doba) VALUES (?, ?);";
-    		sqlite3_stmt* stmt2;
-			
-
 			switch(standard)
 			{
 				case 0:
@@ -964,62 +1062,64 @@ public:
 					break;
 				default:
 					cout << "Podano niepoprawną wartość!" << endl << endl;
-	            	sqlite3_finalize(stmt2);
 					return 0;
 			}
 
+			string insert = "INSERT INTO Informacje_hotel (standard_pokoju, cena_doba) VALUES (?, ?);";
+    		sqlite3_stmt* stmt2;
 			if(sqlite3_prepare_v2(db, insert.c_str(), -1, &stmt2, nullptr) != SQLITE_OK) 
         	{
             	cerr << "Nie można przygotować zapytania: " << sqlite3_errmsg(db) << endl;
             	return -1;
         	}
-        sqlite3_bind_text(stmt2, 1, nazwa_standard.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt2, 2, cena_doba);
+        	sqlite3_bind_text(stmt2, 1, nazwa_standard.c_str(), -1, SQLITE_STATIC);
+        	sqlite3_bind_int(stmt2, 2, cena_doba);
 			if(sqlite3_step(stmt2) != SQLITE_DONE)
         	{
             	cerr << "Błąd przy wykonywaniu zapytania: " << sqlite3_errmsg(db) << endl;
             	sqlite3_finalize(stmt2);
             	return -1;
         	}
-        sqlite3_finalize(stmt2);
+        	sqlite3_finalize(stmt2);
 
-		int id_ostatni_wiersz = sqlite3_last_insert_rowid(db) - 1;
-		string aktualizacja =  "UPDATE Informacje_hotel SET standard_pokoju = ?, cena_doba = ? WHERE ROWID = " + to_string(id_ostatni_wiersz) + ";";
-    	sqlite3_stmt* stmt_akt;
+			int id_ostatni_wiersz = sqlite3_last_insert_rowid(db);
+			string aktualizacja =  "UPDATE Informacje_hotel SET standard_pokoju = ?, cena_doba = ? WHERE ROWID IN (SELECT ROWID FROM Informacje_hotel ORDER BY ROWID DESC LIMIT 2);"; //WHERE ROWID = " + to_string(id_ostatni_wiersz) + "
+    		sqlite3_stmt* stmt_akt;
 			if(sqlite3_prepare_v2(db, aktualizacja.c_str(), -1, &stmt_akt, nullptr) != SQLITE_OK) 
         	{
             	cerr << "Nie można przygotować zapytania: " << sqlite3_errmsg(db) << endl;
             	return -1;
         	}
-		sqlite3_bind_text(stmt_akt, 1, nazwa_standard.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt_akt, 2, cena_doba);
+			sqlite3_bind_text(stmt_akt, 1, nazwa_standard.c_str(), -1, SQLITE_STATIC);
+			sqlite3_bind_int(stmt_akt, 2, cena_doba);
+			sqlite3_bind_int(stmt_akt, 3, id_ostatni_wiersz - 1);	
 			if(sqlite3_step(stmt_akt) != SQLITE_DONE)
         	{
             	cerr << "Błąd przy wykonywaniu zapytania: " << sqlite3_errmsg(db) << endl;
             	sqlite3_finalize(stmt_akt);
             	return -1;
         	}	
-		sqlite3_finalize(stmt_akt);	
+			sqlite3_finalize(stmt_akt);	
 
-		id_ostatni_wiersz += 1;
-		string usuwanie =  "DELETE FROM Informacje_hotel WHERE ROWID = " + to_string(id_ostatni_wiersz) + ";";
-    	sqlite3_stmt* stmt_usuwanie;
-		if(sqlite3_prepare_v2(db, usuwanie.c_str(), -1, &stmt_usuwanie, nullptr) != SQLITE_OK) 
+			id_ostatni_wiersz = sqlite3_last_insert_rowid(db) + 1;
+			string usuwanie =  "DELETE FROM Informacje_hotel ORDER BY ROWID DESC LIMIT 1;"; 
+	    	sqlite3_stmt* stmt_usuwanie;
+			if(sqlite3_prepare_v2(db, usuwanie.c_str(), -1, &stmt_usuwanie, nullptr) != SQLITE_OK) 
         	{
             	cerr << "Nie można przygotować zapytania: " << sqlite3_errmsg(db) << endl;
             	return -1;
         	}
-		sqlite3_bind_text(stmt_akt, 1, nazwa_standard.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt_akt, 2, cena_doba);
+			sqlite3_bind_text(stmt_usuwanie, 1, nazwa_standard.c_str(), -1, SQLITE_STATIC);
+	        sqlite3_bind_int(stmt_usuwanie, 2, cena_doba);
 			if(sqlite3_step(stmt_usuwanie) != SQLITE_DONE)
         	{
             	cerr << "Błąd przy wykonywaniu zapytania: " << sqlite3_errmsg(db) << endl;
             	sqlite3_finalize(stmt_usuwanie);
             	return -1;
         	}	
-		sqlite3_finalize(stmt_usuwanie);
-
-        return 0;
+			sqlite3_finalize(stmt_usuwanie);
+			sqlite3_close(db);
+        	return 0;
 		}
 	}
 
@@ -1043,25 +1143,21 @@ int main()
 	// Klasa Hotel, Metody: wyswietl_informacje_o_hotelu(), wyswietl_dostepne_pokoje()
 	Hotel h("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3"); 
 	h.wyswietl_informacje_o_hotelu(); //zmienic na pobieranie danych z bazy
-	czekaj(2);
+	czekaj(1);
 	h.wyswietl_dostepne_pokoje();
 	czekaj(1);
 
 	Rezerwacja rez;
 	rez.utworz_rezerwacje(); //e.h.  poprawnosc daty ograniczenia etc
-	int czas_pobytu = rez.oblicz_czas_pobytu();
 	czekaj(1);
 	rez.aktualizuj_rezerwacje();
-	czas_pobytu = rez.oblicz_czas_pobytu();
 	czekaj(1);
 	
 
 	Rachunek rach;
-	double cena_za_dobe = 100.0;  // Ustawiona domyslnie cena za dobę
-	double kwota = cena_za_dobe * czas_pobytu;
-	rach.utworz_rachunek(kwota);
+	rach.utworz_rachunek();
 	czekaj(1);
-	rach.zaplac(czas_pobytu, kwota); // nie uwzglednia miesiecy bo 30.01-20.02 to  -10dni
+	rach.zaplac(); // nie uwzglednia miesiecy bo 30.01-20.02 to  -10dni
 	czekaj(1);
 	
 
