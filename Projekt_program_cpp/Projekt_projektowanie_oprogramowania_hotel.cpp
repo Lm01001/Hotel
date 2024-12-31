@@ -31,15 +31,15 @@ void czekaj(int s)
 class Gosc
 {
 	string imie, email, nazwisko, dane;
-	double nr_tel, id_goscia;
+	int id_goscia;
 	sqlite3* db;
-public:       
-	//pseudolosowe generowanie id goscia. zakres 1-1000
+public:     
+	// Konstruktor domyslny
 	Gosc() 
 	{ 
-
-        srand(time(0));
-        id_goscia = rand() % 15000 + 1; //mamy te dane podawane w rezerwacji 
+		// Pseudolosowe generowanie id goscia. zakres 1-1000
+		srand(time(0));
+        id_goscia = rand() % 15000 + 1;
     }  
 
 	//
@@ -56,12 +56,13 @@ public:
 	//
 	vector<string> zobacz_oferty_hoteli() 
 	{
+		// Obiekt klasy Gosc
+		Gosc gosc;
 		vector<string> oferty;
 		string sql1;
 		int wybor, min_gwiazdek = 0;
 		char filtry;
-		string panstwo = "", miasto = "", opcja = "", i = "";
-		cout << endl << "\t---Wyswietlanie dostepnych hoteli---" << endl;
+		cout << endl << "\t---Wyswietlanie dostepnych hoteli---" << endl << endl;
 		
 		if(!db)
 		{
@@ -69,87 +70,99 @@ public:
             return {}; // dla bledu zwrot pustego wektora
         }
 
-        string sql = "SELECT nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo, adres FROM Hotele WHERE 1=1";
-		cout << "W celu wlaczenia filtrowania wpisz 1." << endl;
-		cin >> i;
-		czekaj(1);
-        if(i == "1")
-		{
-			cout << endl << "Filtrowanie ofert, wybierz jedna z nastepujacych opcji wpisujac przypisana jej cyfre: " << endl;
-			cout << "1. Miasto" << endl << "2. Panstwo" << endl << "3. Liczba gwiazdek" << endl << "Wybierz opcje: " << endl;
-			for(;;)
-			{	
-				cin>>opcja;
-				filtry=opcja[0];
-				if((filtry!='1' && filtry!='2' && filtry!='3') ||  !isdigit(filtry)) 
-				{
-					cout << "Wybrano nieistniejaca opcje." << endl;
-					break;
-				}
+        
+		Poczatek:
+			string panstwo = "", miasto = "", opcja = "", i = "", temp = "";
+			string sql = "SELECT nazwa_hotelu, ilosc_gwiazdek, miasto, panstwo, adres FROM Hotele WHERE 1=1";
+			cout << "W celu wlaczenia filtrowania wpisz 1." << endl;
+			cin >> i;
+			czekaj(1);
+        	if(i == "1")
+			{
+				cout << endl << "Filtrowanie ofert, wybierz jedna z nastepujacych opcji wpisujac przypisana jej cyfre: " << endl;
+				cout << "1. Miasto" << endl << "2. Panstwo" << endl << "3. Minimalna liczba gwiazdek" << endl << endl << "Wybierz opcje: " << endl;
+				for(;;)
+				{	
+					cin >> opcja;
+					filtry=opcja[0];
+					if((filtry!='1' && filtry!='2' && filtry!='3') ||  !isdigit(filtry)) 
+					{
+						cout << "Wybrano nieistniejaca opcje." << endl;
+						break;
+					}
             
-				switch(filtry)
-				{
-					case '1':
-						cout << "Podaj nazwe miasta: " << endl;
-						cin >> miasto;
-						break;
-					case '2':
-						cout << "Podaj nazwe panstwa: " << endl;
-						cin >> panstwo;
-						break;
-					case '3':
-						cout << "Podaj liczbe gwiazdek: " << endl;
-						cin >> min_gwiazdek;
-						break;
-					default:
+					switch(filtry)
+					{
+						case '1':
+							cout << "Podaj nazwe miasta: " << endl;
+							cin >> miasto;
+							break;
+						case '2':
+							cout << "Podaj nazwe panstwa: " << endl;
+							cin >> panstwo;
+							break;
+						case '3':
+							cout << "Podaj liczbe gwiazdek: " << endl;
+							cin >> min_gwiazdek; 
+							temp = string(min_gwiazdek, '*');
+							break;
+						default:
+							break;	
+					};
+					cout << "Czy chcesz kontynuowac filtrowanie? Jesli tak, wpisz 1." << endl;; 
+					cin >> i;
+					if(i == "1")
+					{
+						cout << "Wybierz kolejna opcje: " << endl;
+						continue;
+					}else
 						break;	
-				};
-				cout << "Wybierz kolejna opcje: " << endl;
-			}	
-			if(!miasto.empty())
+				}	
+				if(!miasto.empty())
 			{
 				transform(miasto.begin(), miasto.end(), miasto.begin(), ::tolower);
 				miasto[0] = ::toupper(miasto[0]);
           		sql += " AND miasto = '" + miasto + "'";
 			}
-			if(!panstwo.empty())
+				if(!panstwo.empty())
 			{
 				transform(panstwo.begin(), panstwo.end(), panstwo.begin(), ::tolower);
 				panstwo[0] = ::toupper(panstwo[0]);
           		sql += " AND panstwo = '" + panstwo + "'";
 			}
-        	if(min_gwiazdek > 0)
-            	sql += " AND ilosc_gwiazdek >= " + to_string(min_gwiazdek) + ";";
-		}
+        		if(min_gwiazdek > 0)
+            		sql += " AND ilosc_gwiazdek >= '" + temp + "';";
+			}
 
-		// Funkcja callback do przetwarzania wyników
-        auto callback = [](void* oferty, int argc, char** argv, char** azColName) -> int 
-		{
-            vector<string>* wyniki_vector = static_cast<vector<string>*>(oferty);
-            string wynik = "Hotel: " + string(argv[0]) + ", Gwiazdki: " + string(argv[1]) + ", Miasto: " + string(argv[2]) + ", Panstwo: " + string(argv[3]) + ", Adres: " + string(argv[4]);
-            wyniki_vector->push_back(wynik);
-			return 0;
-        };
+			// Funkcja callback do przetwarzania wyników
+        	auto callback = [](void* oferty, int argc, char** argv, char** azColName) -> int 
+			{
+        	    vector<string>* wyniki_vector = static_cast<vector<string>*>(oferty);
+        	    string wynik = "Hotel: " + string(argv[0]) + ", Gwiazdki: " + string(argv[1]) + ", Miasto: " + string(argv[2]) + ", Panstwo: " + string(argv[3]) + ", Adres: " + string(argv[4]);
+        	    wyniki_vector->push_back(wynik);
+				return 0;
+        	};
 
-		cout << endl;
-       	char* error = nullptr;
-        if(sqlite3_exec(db, sql.c_str(), callback, &oferty, &error)!=SQLITE_OK)
-		{
-            cerr<<"Błąd podczas wykonywania zapytania: "<<error<< endl;
-            sqlite3_free(error);
-			return {}; // dla bledu zwrot pustego wektora
-        }
+			cout << endl;
+       		char* error = nullptr;
+        	if(sqlite3_exec(db, sql.c_str(), callback, &oferty, &error)!=SQLITE_OK)
+			{
+        	    cerr<<"Błąd podczas wykonywania zapytania: "<<error<< endl;
+        	    sqlite3_free(error);
+				return {}; // dla bledu zwrot pustego wektora
+        	}
 
-		for(size_t i = 0; i < oferty.size(); ++i) 
-		{
-        	cout << i + 1 << ". " << oferty[i] << endl;
-    	}
+			for(size_t i = 0; i < oferty.size(); ++i) 
+			{
+        		cout << i + 1 << ". " << oferty[i] << endl;
+    		}
 
-    	if(oferty.empty()) 
-		{
-        	cout << "Brak ofert spełniających kryteria." << endl;
-        	return {};
-    	}
+    		if(oferty.empty()) 
+			{	
+				cout << "Brak ofert spełniających kryteria." << endl;
+				goto Poczatek;
+        		//return {};
+    		}
 
     	cout << "\n\tWybierz numer oferty, która Cie interesuje: ";
     	Wybor:
@@ -172,9 +185,7 @@ public:
 		string adres = oferty[wybor - 1].substr(ostatnia_kol + 1);       
 		string ilosc_gwiazdek = oferty[wybor - 1].substr(start, koniec - start);
 		
-		
-		
-		sql1 = "INSERT INTO Informacje_hotel (nazwa_hotelu, standard_pokoju, cena_doba, adres, liczba_gwiazdek) VALUES ('" + nazwa_hotelu + "' , NULL ,  NULL,'" + adres + "', '" + ilosc_gwiazdek + "');";
+		sql1 = "INSERT INTO Informacje_hotel (nazwa_hotelu, standard_pokoju, cena_doba, adres, liczba_gwiazdek, id_goscia) VALUES ('" + nazwa_hotelu + "' , NULL ,  NULL,'" + adres + "', '" + ilosc_gwiazdek + "', '" + to_string(gosc.id_goscia) + "');";
 
     	if(sqlite3_exec(db, sql1.c_str(), nullptr, nullptr, &error) != SQLITE_OK) 
 		{
@@ -207,7 +218,7 @@ public:
 	bool poprawna_data(const string& data)
 	{
     	if(data.size() != 10) return false;
-    	if((data[2] != '-' && data[2] != '.') || (data[5] != '-' && data[5] != '.')) 
+    	if(data[2] != '-' || data[5] != '-') 
         	return false;
     	for(int i = 0; i < data.size(); ++i) 
 		{
@@ -256,38 +267,22 @@ public:
 		}else 
         	cerr << "Blad przy pobieraniu danych." << endl;
 		sqlite3_finalize(stmt2);
-
-		/*for(;;){
-			cout << "Wybierz standard pokoju('standard', 'studio' lub 'premium'): "; cin>>standard_pokoju;
-			transform(standard_pokoju.begin(), standard_pokoju.end(), standard_pokoju.begin(), ::tolower);
-			if(standard_pokoju == "standard" || standard_pokoju == "studio" || standard_pokoju == "premium")
-				break;
-			if(standard_pokoju != "standard" && standard_pokoju != "studio" && standard_pokoju != "premium"){
-				cout << "Taki standard nie istnieje. Tworzenie rezerwacji zakończone niepowodzeniem!" << endl;
-				cout << "Jesli chcesz wybrac ponownie podaj 1." << endl;
-				cin>>i;
-			}
-			if(i == 1)
-				continue;
-			else
-				exit(1);
-		}*/
 		
 		for(;;) 
 		{
-        	cout << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
+        	cout << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR): ";
         	cin>>poczatek_rezerwacji;
         	if(!poprawna_data(poczatek_rezerwacji)) 
-           		cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
+           		cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR" << endl;
          	else 
             	break;
         }
 		for(;;) 
 		{
-        	cout << "Podaj koniec rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
+        	cout << "Podaj koniec rezerwacji (w formacie: DD-MM-RRRR): ";
         	cin>>koniec_rezerwacji;
         	if(!poprawna_data(koniec_rezerwacji))
-            	cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
+            	cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR" << endl;
         	else 
             	break;
         }
@@ -416,19 +411,19 @@ public:
 
 		for(;;) 
 		{
-        	cout << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
+        	cout << "Podaj poczatek rezerwacji (w formacie: DD-MM-RRRR): ";
         	cin >> poczatek_rezerwacji;
         	if(!poprawna_data(poczatek_rezerwacji)) 
-           		cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
+           		cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR" << endl;
          	else 
             	break;
         }
 		for(;;) 
 		{
-        	cout << "Podaj koniec rezerwacji (w formacie: DD-MM-RRRR lub DD.MM.RRRR): ";
+        	cout << "Podaj koniec rezerwacji (w formacie: DD-MM-RRRR): ";
         	cin >> koniec_rezerwacji;
         	if(!poprawna_data(koniec_rezerwacji))
-            	cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
+            	cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR" << endl;
         	else 
             	break;
         }
@@ -697,12 +692,13 @@ class Pracownik
 {
 protected:
 	string imie, nazwisko, rola;
-	double id_pracownika;
+	int id_pracownik;
+	int& id_pracownika = id_pracownik;
 public:
-	// konstruktor, utworzony w celu umozliwienia klasie menadzer_hotelu dziedziczenie elementow protected 
+	// Konstruktor, utworzony w celu umozliwienia klasie menadzer_hotelu dziedziczenie elementow protected 
 	Pracownik (string& im, string& nazw, string& rol, double& id_prac) : imie(im), nazwisko (nazw), rola(rol){} 
 	
-	//pseudolosowe generowanie id pracownika. zakres 1-1000
+	// Pseudolosowe generowanie id pracownika. zakres 1-1000
 	Pracownik() 
 	{ 
         srand(time(0));
@@ -713,7 +709,7 @@ public:
 	bool poprawna_data(const string& data)
 	{
     	if(data.size() != 10) return false;
-    	if((data[2] != '-' && data[2] != '.') || (data[5] != '-' && data[5] != '.')) 
+    	if(data[2] != '-' || data[5] != '-') 
         	return false;
     	for(int i = 0; i < data.size(); ++i) 
 		{
@@ -734,22 +730,22 @@ public:
         return t;
     }
 	
-	//zrobic konwersje dat do jednego ujednoliconego typu
+	// Zrobic konwersje dat do jednego ujednoliconego typu
 	void aktualizuj_dostepnosc() // ??? atrybuty  // dodawac numer pokoju?? moze baza danych z losowymi danymi pracownika
 	{
 		string data, usun = "";
 		cout << endl << "\t---Aktualizacja dostepnosci---" << endl;
-		cout << "Podaj dzisiejsza date (w formacie: DD-MM-RRRR lub DD.MM.RRRR) w celu sprawdzenia mozliwosc zaktualizowania dostepnosci." << endl; // dodac ilosc standardow jakos wczesniej
+		cout << "Podaj dzisiejsza date (w formacie: DD-MM-RRRR) w celu sprawdzenia mozliwosc zaktualizowania dostepnosci." << endl; // dodac ilosc standardow jakos wczesniej
 		cout << "W przypadku checi usuniecia rezerwacji, wpisz konkretna date jej zakonczenia i wybierz bazujac, przypisana do jej id. " << endl;
 		for(;;) 
 		{
 			cin >> data;
         	if(!poprawna_data(data))
-            	cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR lub DD.MM.RRRR" << endl;
+            	cout << endl << "Niepoprawny format! Podaj datę ponownie. W formacie DD-MM-RRRR" << endl;
         	else 
             	break;
         }
-		cout << "---Rezerwacje konczace sie w dniu dzisiejszym---" << endl;
+		cout << "\t---Rezerwacje konczace sie w dniu dzisiejszym---" << endl;
 		sqlite3* db;
 		sqlite3_stmt *stmt;
     	if (sqlite3_open("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3", &db) != SQLITE_OK) 
@@ -758,39 +754,42 @@ public:
         	return;
     	}
     	string sql = "SELECT id_rezerwacji, imie_goscia, nazwisko_goscia, standard_pokoju, koniec_rezerwacji FROM Rezerwacje WHERE koniec_rezerwacji = ?;"; 
-    	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
-    	if(rc != SQLITE_OK) 
+    	if(sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0) != SQLITE_OK) 
 		{
         	cerr << "Nie udało się przygotować zapytania: " << sqlite3_errmsg(db) << endl;
 			sqlite3_close(db);
         	return;
     	}
     	sqlite3_bind_text(stmt, 1, data.c_str(), -1, SQLITE_STATIC);
-		rc = sqlite3_step(stmt);
-    	while(rc == SQLITE_ROW) 
+		if(data.empty())
+		{
+			cout << "Brak rezerwacji spelniajacych warunek! " << endl;
+			return;
+		}
+    	while(sqlite3_step(stmt) == SQLITE_ROW) 
 		{
 			cout << "| " << "id_rezerwacji:  " << sqlite3_column_text(stmt, 0) << " | " << "imie_goscia:  " << sqlite3_column_text(stmt, 1) << " | "
         	<< "nazwisko_goscia:  " << sqlite3_column_text(stmt, 2) << " | " << "standard_pokoju:  " << sqlite3_column_text(stmt, 3) << " | " << sqlite3_column_text(stmt, 4) << endl;
-			rc = sqlite3_step(stmt);
     	}
 		cout << "Podaj id rezerwacji, ktora chcesz usunac. " << endl;
 		cin >> usun;
-		if(usun.empty() || !std::all_of(usun.begin(), usun.end(), ::isdigit))
+		if(usun.empty() || !all_of(usun.begin(), usun.end(), ::isdigit))
 			return;
-		rc = sqlite3_step(stmt);
-    	if (rc == SQLITE_ROW) 
+    	if (sqlite3_step(stmt) == SQLITE_ROW) 
 		{
         	data = sqlite3_column_int(stmt, 0);
         	string sql = "DELETE FROM Rezerwacje WHERE id_rezerwacji = " + usun + ";"; 
         	char* err_msg = nullptr;
 			czekaj(1);
-       		rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg);
-        	if(rc != SQLITE_OK) 
+        	if(sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg) != SQLITE_OK) 
 			{
             	cerr << "Niepowodzenie przy usuwaniu! " << err_msg << endl;
             	sqlite3_free(err_msg);
-        	}else 
-			{
+        	}
+			/*else if(sqlite3_column_text(stmt, 4) != usun)
+			{ 
+				cout << "Rezerwacja o tym numerze nie spelnia warunku poczatkowego! " << endl;
+			}*/else{
             	cout << "Rezerwacja " << usun << " usunięta pomyslnie." << endl << endl; //!!!!!!!!!!!!!!
         	}
     	}else 
@@ -800,31 +799,59 @@ public:
     	return; 
 	}
 
-	//
-	void zarejstruj_godziny_pracy(double id_pracownika) //!!!!!zmienic id_pracownika i nie dawac jako argument
+	// 
+	bool poprawna_godzina(const string& data)
 	{
+    	if(data.size() != 5) 
+			return false;
+    	if(data[2] != ':') 
+        	return false;
+    	for(int i = 0; i < data.size(); ++i) 
+		{
+       		if (i == 2 ) 
+				continue;  // pominiecie "oddzielnika"
+        	if (!isdigit(data[i])) 
+				return false;
+    	}
+    	return true;
+	}
+
+	//
+	void zarejstruj_godziny_pracy() //!!!!!zmienic id_pracownika i nie dawac jako argument
+	{	
+		Pracownik pracownik_id;
 		sqlite3* db;
 		sqlite3_stmt* stmt;
 		string poczatek_pracy, koniec_pracy;
+
 		cout << endl << "\t---Rejestracja godzin pracy---" << endl;
-		cout << "Podaj godzine poczatku pracy (w formacie hh:mm): " << endl;
-		cin >> poczatek_pracy;
-		cout << "Podaj godzine konca pracy (w formacie hh:mm): " << endl;
-		cin >> koniec_pracy;
+		for(;;) 
+		{
+			cout << "Podaj godzine poczatku pracy (w formacie hh:mm): " << endl;
+			cin >> poczatek_pracy;
+			if(!poprawna_godzina(poczatek_pracy))
+				cout << endl << "Niepoprawny format! Podaj godzine ponownie. W formacie HH:MM" << endl;
+        	else 
+            	break;
+		}
+		// \/ pobrac z rezerwacje aktualna godzine i przypisac
+		//cout << "Podaj godzine konca pracy (w formacie hh:mm): " << endl;
+		//cin >> koniec_pracy;
 		if(sqlite3_open("/mnt/c/Users/maksy/OneDrive - Akademia Górniczo-Hutnicza im. Stanisława Staszica w Krakowie/Pulpit/sklonowane/Hotel/data/program_glowna_bd.sqlite3", &db) != SQLITE_OK) 
 		{
         	cerr << "Błąd przy otwieraniu bazy danych: " << sqlite3_errmsg(db) << endl;
         	return;
     	}
+		
 		string sql = "INSERT INTO Rejestrowanie (id_pracownika, poczatek_pracy, koniec_pracy, dzien_tygodnia) "
-                      "VALUES (?, ?, ?, CASE strftime('%w', ?) "
-					  "WHEN '0' THEN 'Sobota' "
-                      "WHEN '1' THEN 'Niedziela' "
-                      "WHEN '2' THEN 'Poniedziałek' "
-                      "WHEN '3' THEN 'Wtorek' "
-                      "WHEN '4' THEN 'Środa' "
-                      "WHEN '5' THEN 'Czwartek' "
-                      "WHEN '6' THEN 'Piątek' "
+                      "VALUES ('" + to_string(pracownik_id.id_pracownika) + "','" + poczatek_pracy + "', strftime('%H:%M', datetime('now', '-576 minutes')), CASE strftime('%w', 'now') "
+					  "WHEN '0' THEN 'Sroda' "
+                      "WHEN '1' THEN 'Czwartek' "
+                      "WHEN '2' THEN 'Piatek' "
+                      "WHEN '3' THEN 'Sobota' "
+                      "WHEN '4' THEN 'Niedziela' "
+                      "WHEN '5' THEN 'Poniedzialek' "
+                      "WHEN '6' THEN 'Wtorek' "
                       "END);";
 		if(sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) 
 		{
@@ -1200,16 +1227,16 @@ int main()
 	Rachunek rach;
 	rach.utworz_rachunek();
 	czekaj(1);
-	rach.zaplac(); // nie uwzglednia miesiecy bo 30.01-20.02 to  -10dni
+	//rach.zaplac(); // nie uwzglednia miesiecy bo 30.01-20.02 to  -10dni
 	czekaj(1);
 	
 
 	string imie = "nie", nazwisko = "tak", stanowisko = "recepcjonista";
-	double id_pracownika =123456;
+	double id_pracownika;
 	Pracownik p(imie, nazwisko, stanowisko, id_pracownika);
 	p.aktualizuj_dostepnosc();
 	czekaj(1);
-	p.zarejstruj_godziny_pracy(id_pracownika);
+	p.zarejstruj_godziny_pracy();
 	czekaj(1);
 
 	return 1;
@@ -1218,4 +1245,4 @@ int main()
 
 //zrobic: czas_pobytu i kwota, czas pracy logika i najlepiej minuty igarnac-->latwije wtedy,
 //data logika, przy wpisywaniu do tabel, i wszedzie, zmieniac "."  ma "-"
-//zmienic dane pracownika na losowe wszystko wlasciwie, pobierane z jakiejs bazy z kilkoma losowymi
+//jak administrator chce usuwac konta to pewnie niech wywala pracownikow lub poszukac innego (albo gdzies do tych gosci czy rezerwacji dorzucic id gosci i wtedy0 - zrobione
